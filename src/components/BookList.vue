@@ -12,7 +12,7 @@ const props = defineProps<{
     <h2>Meine Bücher</h2>
     <ul>
       <li v-for="book in props.books" :key="book.id">
-        <strong>{{ book.title }}</strong> von {{ book.author }}
+        <strong>{{ book.title }}</strong> von {{ book.author }}<strong></strong> aus {{ book.releaseYear }}
       </li>
     </ul>
   </div>

@@ -9,28 +9,26 @@ const selectedBook = ref<Book | null>(null);
 
 const fetchBooks = async () => {
   try {
-    const response = await fetch(
-      `https://webtech-backend-g4ak.onrender.com/api/v1/books?ts=${Date.now()}`,
-      {
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
-      }
-    );
+
+    const timestamp = new Date().getTime();
+    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books?timestamp=${timestamp}`, {
+      method: 'GET'
+    });
 
     if (response.ok) {
       books.value = await response.json();
     }
   } catch (error) {
-    console.error('Fehler beim Laden der Bücher:', error);
+    console.error("Fehler beim Laden der Bücher:", error);
   }
 };
 
 const handleEditRequest = (book: Book) => {
+  console.log("Buch zum Bearbeiten ausgewählt:", book);
   selectedBook.value = book;
 };
 
-const handleBookChanged = () => {
+const handleFinished = () => {
   selectedBook.value = null;
   fetchBooks();
 };
@@ -44,7 +42,8 @@ onMounted(fetchBooks);
 
     <BookForm
       :book-to-edit="selectedBook"
-      @book-changed="handleBookChanged"
+      @book-created="handleFinished"
+      @book-deleted="handleFinished"
       @cancel-edit="selectedBook = null"
     />
 
@@ -55,3 +54,17 @@ onMounted(fetchBooks);
     />
   </main>
 </template>
+
+<style scoped>
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+</style>

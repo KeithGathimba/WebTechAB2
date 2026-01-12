@@ -22,30 +22,6 @@ const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
 };
 
-
-
-const handleDeleteRequest = async (id: number) => {
-  console.log("3. HomeView hat Lösch-Befehl erhalten für ID:", id); // <--- NEU
-  if (selectedBook.value?.id === id) {
-    selectedBook.value = null;
-  }
-
-  try {
-    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${id}`, {
-      method: 'DELETE'
-    });
-
-    if (response.ok) {
-      await fetchBooks();
-      console.log("Buch erfolgreich gelöscht");
-    } else {
-      console.error("Fehler beim Löschen, Server-Antwort:", response.status);
-    }
-  } catch (error) {
-    console.error("Netzwerkfehler beim Löschen:", error);
-  }
-};
-
 const handleFinished = () => {
   selectedBook.value = null;
   fetchBooks();
@@ -61,13 +37,13 @@ onMounted(fetchBooks);
     <BookForm
       :book-to-edit="selectedBook"
       @book-created="handleFinished"
+      @book-deleted="handleFinished"
       @cancel-edit="selectedBook = null"
     />
 
     <BookList
       :books="books"
       @edit-book="handleEditRequest"
-      @delete-book="handleDeleteRequest"
     />
   </main>
 </template>

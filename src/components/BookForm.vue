@@ -10,7 +10,8 @@ const title = ref('');
 const author = ref('');
 const releaseYear = ref(2024);
 
-const emit = defineEmits(['book-created', 'cancel-edit']);
+// Neues Event 'book-deleted' hinzugefügt
+const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
 
 watch(() => props.bookToEdit, (newVal) => {
   if (newVal) {
@@ -64,6 +65,32 @@ const submitForm = async () => {
     alert('Es gab einen Fehler beim Verarbeiten!');
   }
 };
+
+// Neue Funktion zum Löschen
+const deleteBook = async () => {
+  if (!props.bookToEdit) return;
+
+  if (!confirm('Möchtest du dieses Buch wirklich löschen?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit.id}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      alert('Buch erfolgreich gelöscht!');
+      resetForm();
+      emit('book-deleted');
+    } else {
+      alert('Fehler beim Löschen des Buches.');
+    }
+  } catch (error) {
+    console.error("Fehler:", error);
+    alert('Netzwerkfehler beim Löschen.');
+  }
+};
 </script>
 
 <template>
@@ -89,6 +116,16 @@ const submitForm = async () => {
         <button type="submit" class="btn-save">
           {{ props.bookToEdit ? 'Speichern' : 'Hinzufügen' }}
         </button>
+
+        <button
+          v-if="props.bookToEdit"
+          type="button"
+          @click="deleteBook"
+          class="btn-delete"
+        >
+          Löschen
+        </button>
+
         <button v-if="props.bookToEdit" type="button" @click="emit('cancel-edit')" class="btn-cancel">
           Abbrechen
         </button>
@@ -166,8 +203,13 @@ button:hover {
   flex: 1;
 }
 
+.btn-delete {
+  background-color: #c62828;
+  color: white;
+}
+
 .btn-cancel {
-  background-color: #d32f2f;
+  background-color: #757575;
   color: white;
 }
 </style>

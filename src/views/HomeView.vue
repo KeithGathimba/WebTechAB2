@@ -22,7 +22,6 @@ const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
 };
 
-// NEU: Löschen-Logik
 const handleDeleteRequest = async (id: number) => {
   if (selectedBook.value?.id === id) {
     selectedBook.value = null;
@@ -33,15 +32,11 @@ const handleDeleteRequest = async (id: number) => {
       method: 'DELETE'
     });
 
-    // NEU: Status-Code anzeigen
-    console.log("Delete Status:", response.status);
-
     if (response.ok) {
       await fetchBooks();
-      alert("Gelöscht!");
+      console.log("Buch erfolgreich gelöscht");
     } else {
-      // Zeigt dir den Fehler direkt an
-      alert(`Fehler! Server antwortet mit Code: ${response.status}`);
+      console.error("Fehler beim Löschen, Server-Antwort:", response.status);
     }
   } catch (error) {
     console.error("Netzwerkfehler beim Löschen:", error);
@@ -60,56 +55,30 @@ onMounted(fetchBooks);
   <main class="container">
     <h1>Bücherverwaltung</h1>
 
-    <div class="content-wrapper">
-      <section class="form-section">
-        <BookForm
-          :book-to-edit="selectedBook"
-          @book-created="handleFinished"
-          @cancel-edit="selectedBook = null"
-        />
-      </section>
+    <BookForm
+      :book-to-edit="selectedBook"
+      @book-created="handleFinished"
+      @cancel-edit="selectedBook = null"
+    />
 
-      <section class="list-section">
-        <BookList
-          :books="books"
-          :selected-book-id="selectedBook?.id"
-          @edit-book="handleEditRequest"
-          @delete-book="handleDeleteRequest"
-        />
-      </section>
-    </div>
+    <BookList
+      :books="books"
+      @edit-book="handleEditRequest"
+      @delete-book="handleDeleteRequest"
+    />
   </main>
 </template>
 
 <style scoped>
 .container {
-  max-width: 1000px;
+  max-width: 800px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 h1 {
   text-align: center;
-  color: #fff;
-  margin-bottom: 40px;
-}
-
-.content-wrapper {
-  display: flex;
-  gap: 30px;
-  align-items: flex-start;
-}
-
-.form-section {
-  flex: 1;
-}
-
-.list-section {
-  flex: 1;
-}
-
-@media (max-width: 768px) {
-  .content-wrapper {
-    flex-direction: column;
-  }
+  color: #2c3e50;
+  margin-bottom: 30px;
 }
 </style>

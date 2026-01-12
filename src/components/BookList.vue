@@ -4,7 +4,6 @@ import { type Book } from '../types/Book';
 
 const props = defineProps<{
   books: Book[];
-  selectedBookId?: number;
 }>();
 
 const emit = defineEmits<{
@@ -22,26 +21,17 @@ const requestDelete = (bookId: number) => {
 <template>
   <div class="book-list-container">
     <h2>Meine Bücher</h2>
-    <p v-if="props.books.length === 0" class="empty-msg">Keine Bücher vorhanden.</p>
-
-    <ul v-else class="list">
+    <p v-if="props.books.length === 0">Keine Bücher vorhanden.</p>
+    <ul>
       <li
         v-for="book in props.books"
         :key="book.id"
         @click="emit('edit-book', book)"
         class="book-item"
-        :class="{ 'is-selected': book.id === props.selectedBookId }"
       >
-        <div class="book-content">
-          <span class="book-title">{{ book.title }}</span>
-          <span class="book-info">von {{ book.author }} ({{ book.releaseYear }})</span>
-        </div>
+        <span><strong>{{ book.title }}</strong> von {{ book.author }} ({{ book.releaseYear }})</span>
 
-        <button
-          class="btn-delete"
-          @click.stop="requestDelete(book.id)"
-          title="Buch löschen"
-        >
+        <button @click.stop="requestDelete(book.id)" style="margin-left: 10px; cursor: pointer;">
           🗑️
         </button>
       </li>
@@ -51,91 +41,22 @@ const requestDelete = (bookId: number) => {
 
 <style scoped>
 .book-list-container {
-  background-color: #1e1e1e;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  color: #fff;
+  margin-top: 20px;
 }
-
-h2 {
-  margin-top: 0;
-  border-bottom: 1px solid #333;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-}
-
-.empty-msg {
-  color: #888;
-  font-style: italic;
-}
-
-.list {
+ul {
   list-style-type: none;
   padding: 0;
-  margin: 0;
 }
-
 .book-item {
   cursor: pointer;
-  padding: 12px;
-  border-bottom: 1px solid #333;
-  transition: all 0.2s ease-in-out;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Damit der Mülleimer rechts ist */
   align-items: center;
 }
-
-.book-item:last-child {
-  border-bottom: none;
-}
-
-.is-selected .book-title {
-  font-weight: 900;
-  color: #4CAF50;
-  text-decoration: underline;
-}
-
 .book-item:hover {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  transform: scale(1.02);
-  border-radius: 4px;
-}
-
-.book-item:hover .book-info {
-  color: #000000;
-}
-
-.book-title {
-  font-size: 1.1em;
-  font-weight: bold;
-  display: block;
-}
-
-.book-info {
-  font-size: 0.9em;
-  color: #aaa;
-}
-
-.btn-delete {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  opacity: 0.7;
-}
-
-.btn-delete:hover {
-  background-color: #ffcccc;
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.book-item:hover .btn-delete {
-  filter: grayscale(0%);
+  background-color: #e0e0e0;
 }
 </style>

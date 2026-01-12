@@ -60,10 +60,8 @@ const submitForm = async () => {
     alert('Es gab einen Fehler beim Verarbeiten!');
   }
 };
-
 const deleteBook = async () => {
   if (!props.bookToEdit) return;
-
   if (!confirm('Möchtest du dieses Buch wirklich löschen?')) return;
 
   try {
@@ -72,7 +70,8 @@ const deleteBook = async () => {
     });
 
     if (response.ok) {
-      emit('book-deleted');
+      emit('book-deleted', props.bookToEdit.id);
+
       resetForm();
       alert('Buch erfolgreich gelöscht!');
     } else {
@@ -82,6 +81,7 @@ const deleteBook = async () => {
     console.error("Fehler:", error);
     alert('Netzwerkfehler beim Löschen.');
   }
+
 };
 </script>
 

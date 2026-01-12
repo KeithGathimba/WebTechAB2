@@ -9,14 +9,10 @@ const selectedBook = ref<Book | null>(null);
 
 const fetchBooks = async () => {
   try {
-    // TRICK: Wir hängen die aktuelle Zeit an (?t=...),
-    // damit der Browser NICHTS aus dem Cache lädt.
-    const timestamp = Date.now();
-    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books?t=${timestamp}`, {
+    const response = await fetch('https://webtech-backend-g4ak.onrender.com/api/v1/books', {
       method: 'GET',
-      headers: { 'Cache-Control': 'no-cache' } // Doppelte Sicherheit
+      cache: 'no-store'
     });
-
     if (response.ok) {
       books.value = await response.json();
     }
@@ -29,10 +25,14 @@ const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
 };
 
-// Diese Funktion wird nach dem Löschen oder Erstellen aufgerufen
-const handleFinished = () => {
-  selectedBook.value = null; // Formular zurücksetzen
-  fetchBooks(); // Liste SOFORT neu laden
+const handleBookCreated = () => {
+  selectedBook.value = null;
+  fetchBooks();
+};
+
+const handleBookDeleted = (deletedId: number) => {
+  selectedBook.value = null;
+  books.value = books.value.filter(book => book.id !== deletedId);
 };
 
 onMounted(fetchBooks);
@@ -44,8 +44,8 @@ onMounted(fetchBooks);
 
     <BookForm
       :book-to-edit="selectedBook"
-      @book-created="handleFinished"
-      @book-deleted="handleFinished"
+      @book-created="handleBookCreated"
+      @book-deleted="handleBookDeleted"
       @cancel-edit="selectedBook = null"
     />
 

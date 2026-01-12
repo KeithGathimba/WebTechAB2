@@ -13,7 +13,7 @@ const getStatusColor = (status: string) => {
     case 'Gelesen': return '#4CAF50';
     case 'Steht an': return '#FF9800';
     case 'Offen': return '#2196F3';
-    default: return '#757575'; //
+    default: return '#757575';
   }
 };
 </script>
@@ -30,17 +30,24 @@ const getStatusColor = (status: string) => {
         class="book-item"
         :class="{ 'active': book.id === props.selectedBookId }"
       >
-        <div class="book-info">
-          <strong>{{ book.title }}</strong>
-          <span class="author">von {{ book.author }} ({{ book.releaseYear }})</span>
-        </div>
+        <div class="book-content">
+          <div class="book-header">
+            <strong>{{ book.title }}</strong>
+            <span
+              class="status-badge"
+              :style="{ backgroundColor: getStatusColor(book.status) }"
+            >
+              {{ book.status || 'Offen' }}
+            </span>
+          </div>
 
-        <span
-          class="status-badge"
-          :style="{ backgroundColor: getStatusColor(book.status) }"
-        >
-          {{ book.status || 'Offen' }}
-        </span>
+          <div class="author">von {{ book.author }} ({{ book.releaseYear }})</div>
+
+          <div class="stars" v-if="book.rating > 0">
+            <span v-for="n in book.rating" :key="n">★</span>
+            <span v-for="n in (5 - book.rating)" :key="'empty'+n" style="color: #ccc;">★</span>
+          </div>
+        </div>
       </li>
     </ul>
   </div>
@@ -54,9 +61,6 @@ ul { list-style-type: none; padding: 0; }
   cursor: pointer;
   padding: 15px;
   border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   border-left: 6px solid transparent;
   transition: background-color 0.2s;
 }
@@ -64,15 +68,26 @@ ul { list-style-type: none; padding: 0; }
 .book-item:hover { background-color: #f0f0f0; }
 .book-item.active { background-color: #c8e6c9 !important; border-left-color: #2e7d32 !important; }
 
-.book-info { display: flex; flex-direction: column; }
-.author { font-size: 0.9em; color: #666; }
+.book-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.author { font-size: 0.9em; color: #666; margin-bottom: 5px; }
 
 .status-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
   color: white;
-  font-size: 0.8em;
+  font-size: 0.75em;
   font-weight: bold;
-  white-space: nowrap;
+}
+
+
+.stars {
+  color: #FFD700;
+  font-size: 1.1em;
 }
 </style>

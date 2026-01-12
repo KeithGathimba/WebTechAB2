@@ -4,4 +4,5 @@ export interface Book {
   author: string;
   releaseYear: number;
   status: string;
+  rating: number;
 }

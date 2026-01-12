@@ -10,6 +10,7 @@ const title = ref('');
 const author = ref('');
 const releaseYear = ref(2024);
 const status = ref('Offen');
+const rating = ref(0);
 
 const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
 
@@ -19,6 +20,7 @@ watch(() => props.bookToEdit, (newVal) => {
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
     status.value = newVal.status || 'Offen';
+    rating.value = newVal.rating || 0;
   } else {
     resetForm();
   }
@@ -29,6 +31,11 @@ const resetForm = () => {
   author.value = '';
   releaseYear.value = 2024;
   status.value = 'Offen';
+  rating.value = 0;
+};
+
+const setRating = (stars: number) => {
+  rating.value = stars;
 };
 
 const submitForm = async () => {
@@ -36,7 +43,8 @@ const submitForm = async () => {
     title: title.value,
     author: author.value,
     releaseYear: releaseYear.value,
-    status: status.value
+    status: status.value,
+    rating: rating.value
   };
 
   const isEdit = !!props.bookToEdit;
@@ -115,6 +123,20 @@ const deleteBook = async () => {
         </select>
       </div>
 
+      <div class="form-group">
+        <label>Bewertung:</label>
+        <div class="star-rating">
+          <span
+            v-for="star in 5"
+            :key="star"
+            @click="setRating(star)"
+            :class="{ 'filled': star <= rating }"
+          >
+            ★
+          </span>
+        </div>
+      </div>
+
       <div class="button-group">
         <button type="submit" class="btn-save">{{ props.bookToEdit ? 'Speichern' : 'Hinzufügen' }}</button>
         <button v-if="props.bookToEdit" type="button" @click="deleteBook" class="btn-delete">Löschen</button>
@@ -129,6 +151,25 @@ const deleteBook = async () => {
 .form-group { margin-bottom: 15px; }
 label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
 input, select { width: 100%; padding: 10px; border-radius: 4px; background-color: #2c2c2c; border: 1px solid #444; color: #fff; }
+
+
+.star-rating {
+  font-size: 24px;
+  cursor: pointer;
+  display: inline-block;
+}
+.star-rating span {
+  color: #555;
+  transition: color 0.2s;
+  padding: 0 2px;
+}
+.star-rating span.filled {
+  color: #FFD700;
+}
+.star-rating span:hover {
+  color: #ffe066;
+}
+
 .button-group { display: flex; gap: 10px; margin-top: 20px; }
 button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
 .btn-save { background-color: #4CAF50; flex: 1; }

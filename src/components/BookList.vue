@@ -11,6 +11,12 @@ const emit = defineEmits<{
   (e: 'edit-book', book: Book): void;
   (e: 'delete-book', id: number): void;
 }>();
+
+const requestDelete = (bookId: number) => {
+  if (confirm('Möchtest du dieses Buch wirklich löschen?')) {
+    emit('delete-book', bookId);
+  }
+};
 </script>
 
 <template>
@@ -33,7 +39,7 @@ const emit = defineEmits<{
 
         <button
           class="btn-delete"
-          @click.stop="emit('delete-book', book.id)"
+          @click.stop="requestDelete(book.id)"
           title="Buch löschen"
         >
           🗑️
@@ -84,19 +90,12 @@ h2 {
   border-bottom: none;
 }
 
-.book-content {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Klick-Status */
 .is-selected .book-title {
   font-weight: 900;
   color: #4CAF50;
   text-decoration: underline;
 }
 
-/* Hover-Effekt */
 .book-item:hover {
   background-color: #ffffff !important;
   color: #000000 !important;
@@ -110,14 +109,14 @@ h2 {
 
 .book-title {
   font-size: 1.1em;
-  margin-bottom: 4px;
+  font-weight: bold;
+  display: block;
 }
 
 .book-info {
   font-size: 0.9em;
   color: #aaa;
 }
-
 
 .btn-delete {
   background: none;
@@ -135,7 +134,6 @@ h2 {
   opacity: 1;
   transform: scale(1.1);
 }
-
 
 .book-item:hover .btn-delete {
   filter: grayscale(0%);

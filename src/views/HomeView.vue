@@ -5,7 +5,6 @@ import BookList from '../components/BookList.vue';
 import type { Book } from '../types/Book';
 
 const books = ref<Book[]>([]);
-
 const selectedBook = ref<Book | null>(null);
 
 const fetchBooks = async () => {
@@ -23,7 +22,7 @@ const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
 };
 
-// NEU: Löschen-Funktion
+// NEU: Löschen-Logik
 const handleDeleteRequest = async (id: number) => {
   if (selectedBook.value?.id === id) {
     selectedBook.value = null;
@@ -38,9 +37,11 @@ const handleDeleteRequest = async (id: number) => {
       await fetchBooks();
     } else {
       console.error("Fehler beim Löschen");
+      alert("Fehler beim Löschen des Buches.");
     }
   } catch (error) {
-    console.error("Netzwerkfehler beim Löschen:", error);
+    console.error("Netzwerkfehler:", error);
+    alert("Verbindungsfehler zum Server.");
   }
 };
 

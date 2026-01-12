@@ -1,85 +1,63 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, onMounted } from 'vue';
+import BookForm from './components/BookForm.vue';
+import BookList from './components/BookList.vue';
+import { type Book } from './types/Book';
+
+const books = ref<Book[]>([]);
+const selectedBook = ref<Book | null>(null);
+
+const fetchBooks = async () => {
+  try {
+    const response = await fetch('https://webtech-backend-g4ak.onrender.com/api/v1/books');
+    if (response.ok) {
+      books.value = await response.json();
+    }
+  } catch (error) {
+    console.error("Fehler beim Laden der Bücher:", error);
+  }
+};
+
+const handleEditRequest = (book: Book) => {
+  selectedBook.value = book;
+};
+
+const handleFinished = () => {
+  selectedBook.value = null;
+  fetchBooks();
+};
+
+onMounted(fetchBooks);
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
+    <h1>Bücherverwaltung</h1>
   </header>
 
-  <RouterView />
+  <main>
+    <BookForm
+      :book-to-edit="selectedBook"
+      @book-created="handleFinished"
+      @cancel-edit="selectedBook = null"
+    />
+    <BookList
+      :books="books"
+      @edit-book="handleEditRequest"
+    />
+  </main>
 </template>
 
-<style scoped>
+<style>
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
 header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
   text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+  padding: 20px;
+  background-color: #2c3e50;
+  color: white;
 }
 </style>

@@ -23,7 +23,7 @@ const handleEditRequest = (book: Book) => {
 };
 
 // NEU: Löschen-Logik
-cconst handleDeleteRequest = async (id: number) => {
+const handleDeleteRequest = async (id: number) => {
   if (selectedBook.value?.id === id) {
     selectedBook.value = null;
   }

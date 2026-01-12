@@ -9,9 +9,10 @@ const selectedBook = ref<Book | null>(null);
 
 const fetchBooks = async () => {
   try {
-    const response = await fetch('https://webtech-backend-g4ak.onrender.com/api/v1/books', {
-      method: 'GET',
-      cache: 'no-store'
+
+    const timestamp = new Date().getTime();
+    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books?timestamp=${timestamp}`, {
+      method: 'GET'
     });
 
     if (response.ok) {
@@ -23,6 +24,7 @@ const fetchBooks = async () => {
 };
 
 const handleEditRequest = (book: Book) => {
+  console.log("Buch zum Bearbeiten ausgewählt:", book);
   selectedBook.value = book;
 };
 

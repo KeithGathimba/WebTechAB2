@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watch } from 'vue';
 import { type Book } from '../types/Book';
 
 const props = defineProps<{
@@ -7,6 +8,10 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['edit-book']);
+
+watch(() => props.selectedBookId, (newId) => {
+  console.log("BookList hat neue ID empfangen zum Markieren:", newId);
+});
 </script>
 
 <template>
@@ -40,19 +45,20 @@ ul {
 
 .book-item {
   cursor: pointer;
-  padding: 10px;
+  padding: 15px;
   border-bottom: 1px solid #eee;
   transition: all 0.2s ease;
-  border-left: 4px solid transparent;
+  border-left: 6px solid transparent;
 }
-
 
 .book-item:hover {
-  background-color: #f9f9f9;
+  background-color: #f0f0f0;
 }
 
+
 .book-item.active {
-  background-color: #e8f5e9;
-  border-left-color: #4CAF50;
+  background-color: #c8e6c9 !important;
+  border-left-color: #2e7d32 !important;
+  font-weight: bold;
 }
 </style>

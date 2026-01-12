@@ -10,7 +10,6 @@ const title = ref('');
 const author = ref('');
 const releaseYear = ref(2024);
 
-// Neues Event 'book-deleted' hinzugefügt
 const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
 
 watch(() => props.bookToEdit, (newVal) => {

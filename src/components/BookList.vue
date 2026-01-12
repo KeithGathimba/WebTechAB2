@@ -12,8 +12,13 @@ const emit = defineEmits<{
 }>();
 
 const requestDelete = (bookId: number) => {
+  console.log("1. Mülleimer wurde geklickt! ID:", bookId);
+
   if (confirm('Möchtest du dieses Buch wirklich löschen?')) {
+    console.log("2. Bestätigt. Sende Event an Parent...");
     emit('delete-book', bookId);
+  } else {
+    console.log("Abgebrochen.");
   }
 };
 </script>

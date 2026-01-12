@@ -22,7 +22,10 @@ const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
 };
 
+
+
 const handleDeleteRequest = async (id: number) => {
+  console.log("3. HomeView hat Lösch-Befehl erhalten für ID:", id); // <--- NEU
   if (selectedBook.value?.id === id) {
     selectedBook.value = null;
   }

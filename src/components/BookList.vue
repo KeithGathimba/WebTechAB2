@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
 import { type Book } from '../types/Book';
 
+// defineProps und defineEmits müssen nicht importiert werden!
 const props = defineProps<{
   books: Book[];
 }>();

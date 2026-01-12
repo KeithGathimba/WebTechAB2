@@ -23,7 +23,7 @@ const handleEditRequest = (book: Book) => {
 };
 
 // NEU: Löschen-Logik
-const handleDeleteRequest = async (id: number) => {
+cconst handleDeleteRequest = async (id: number) => {
   if (selectedBook.value?.id === id) {
     selectedBook.value = null;
   }
@@ -33,15 +33,18 @@ const handleDeleteRequest = async (id: number) => {
       method: 'DELETE'
     });
 
+    // NEU: Status-Code anzeigen
+    console.log("Delete Status:", response.status);
+
     if (response.ok) {
       await fetchBooks();
+      alert("Gelöscht!");
     } else {
-      console.error("Fehler beim Löschen");
-      alert("Fehler beim Löschen des Buches.");
+      // Zeigt dir den Fehler direkt an
+      alert(`Fehler! Server antwortet mit Code: ${response.status}`);
     }
   } catch (error) {
-    console.error("Netzwerkfehler:", error);
-    alert("Verbindungsfehler zum Server.");
+    console.error("Netzwerkfehler beim Löschen:", error);
   }
 };
 

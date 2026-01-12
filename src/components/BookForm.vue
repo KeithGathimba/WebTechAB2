@@ -12,15 +12,12 @@ const releaseYear = ref(2024);
 
 const emit = defineEmits(['book-created', 'cancel-edit']);
 
-// Überwacht Änderungen am bookToEdit Prop
 watch(() => props.bookToEdit, (newVal) => {
   if (newVal) {
-    // Bearbeitungsmodus: Felder füllen
     title.value = newVal.title;
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
   } else {
-    // Anlegemodus: Felder leeren
     resetForm();
   }
 }, { immediate: true });
@@ -38,9 +35,7 @@ const submitForm = async () => {
     releaseYear: releaseYear.value
   };
 
-  // Entscheidung ob Update (PUT) oder Neu (POST)
   const isEdit = !!props.bookToEdit;
-
   const url = isEdit
     ? `https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit?.id}`
     : 'https://webtech-backend-g4ak.onrender.com/api/v1/books';
@@ -61,7 +56,7 @@ const submitForm = async () => {
     }
 
     resetForm();
-    emit('book-created'); // Signalisiert der HomeView, dass wir fertig sind
+    emit('book-created');
     alert(isEdit ? 'Buch erfolgreich aktualisiert!' : 'Buch erfolgreich gespeichert!');
 
   } catch (error) {
@@ -77,12 +72,12 @@ const submitForm = async () => {
     <form @submit.prevent="submitForm">
       <div class="form-group">
         <label for="title">Titel:</label>
-        <input id="title" v-model="title" type="text" required />
+        <input id="title" v-model="title" type="text" required placeholder="Titel des Buches" />
       </div>
 
       <div class="form-group">
         <label for="author">Autor:</label>
-        <input id="author" v-model="author" type="text" required />
+        <input id="author" v-model="author" type="text" required placeholder="Name des Autors" />
       </div>
 
       <div class="form-group">
@@ -92,7 +87,7 @@ const submitForm = async () => {
 
       <div class="button-group">
         <button type="submit" class="btn-save">
-          {{ props.bookToEdit ? 'Änderungen speichern' : 'Buch hinzufügen' }}
+          {{ props.bookToEdit ? 'Speichern' : 'Hinzufügen' }}
         </button>
         <button v-if="props.bookToEdit" type="button" @click="emit('cancel-edit')" class="btn-cancel">
           Abbrechen
@@ -104,12 +99,19 @@ const submitForm = async () => {
 
 <style scoped>
 .form-container {
-  border: 1px solid #ccc;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
   padding: 20px;
-  margin-bottom: 20px;
   border-radius: 8px;
-  background-color: #f9f9f9;
-  color: #333;
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
 }
 
 .form-group {
@@ -120,18 +122,29 @@ label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
+  color: #ccc;
 }
 
 input {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
+  padding: 10px;
   border-radius: 4px;
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  background-color: #333;
 }
 
 .button-group {
   display: flex;
   gap: 10px;
+  margin-top: 20px;
 }
 
 button {
@@ -140,23 +153,21 @@ button {
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  transition: opacity 0.2s;
+}
+
+button:hover {
+  opacity: 0.9;
 }
 
 .btn-save {
   background-color: #4CAF50;
   color: white;
-}
-
-.btn-save:hover {
-  background-color: #45a049;
+  flex: 1;
 }
 
 .btn-cancel {
-  background-color: #f44336;
+  background-color: #d32f2f;
   color: white;
-}
-
-.btn-cancel:hover {
-  background-color: #da190b;
 }
 </style>

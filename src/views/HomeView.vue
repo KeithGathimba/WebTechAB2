@@ -4,13 +4,10 @@ import BookForm from '../components/BookForm.vue';
 import BookList from '../components/BookList.vue';
 import type { Book } from '../types/Book';
 
-// Zustand für die Liste der Bücher
 const books = ref<Book[]>([]);
 
-// Zustand für das aktuell zu bearbeitende Buch (null = Neuanlage)
 const selectedBook = ref<Book | null>(null);
 
-// Funktion zum Laden der Bücher vom Backend
 const fetchBooks = async () => {
   try {
     const response = await fetch('https://webtech-backend-g4ak.onrender.com/api/v1/books');
@@ -22,18 +19,15 @@ const fetchBooks = async () => {
   }
 };
 
-// Wird aufgerufen, wenn in der Liste auf ein Buch geklickt wird
 const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
 };
 
-// Wird aufgerufen, wenn das Formular fertig ist (Speichern oder Abbrechen)
 const handleFinished = () => {
   selectedBook.value = null;
   fetchBooks();
 };
 
-// Initiales Laden beim Start
 onMounted(fetchBooks);
 </script>
 
@@ -41,29 +35,56 @@ onMounted(fetchBooks);
   <main class="container">
     <h1>Bücherverwaltung</h1>
 
-    <BookForm
-      :book-to-edit="selectedBook"
-      @book-created="handleFinished"
-      @cancel-edit="selectedBook = null"
-    />
+    <div class="content-wrapper">
+      <section class="form-section">
+        <BookForm
+          :book-to-edit="selectedBook"
+          @book-created="handleFinished"
+          @cancel-edit="selectedBook = null"
+        />
+      </section>
 
-    <BookList
-      :books="books"
-      @edit-book="handleEditRequest"
-    />
+      <section class="list-section">
+        <BookList
+          :books="books"
+          :selected-book-id="selectedBook?.id"
+          @edit-book="handleEditRequest"
+        />
+      </section>
+    </div>
   </main>
 </template>
 
 <style scoped>
 .container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 h1 {
   text-align: center;
-  color: #2c3e50;
-  margin-bottom: 30px;
+  color: #fff;
+  margin-bottom: 40px;
+}
+
+.content-wrapper {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+.form-section {
+  flex: 1;
+}
+
+.list-section {
+  flex: 1;
+}
+
+/* Responsiv: Untereinander bei kleinen Bildschirmen */
+@media (max-width: 768px) {
+  .content-wrapper {
+    flex-direction: column;
+  }
 }
 </style>

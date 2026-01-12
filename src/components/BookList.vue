@@ -4,6 +4,7 @@ import { type Book } from '../types/Book';
 
 const props = defineProps<{
   books: Book[];
+  selectedBookId?: number;
 }>();
 
 const emit = defineEmits<{
@@ -14,15 +15,18 @@ const emit = defineEmits<{
 <template>
   <div class="book-list-container">
     <h2>Meine Bücher</h2>
-    <p v-if="props.books.length === 0">Keine Bücher vorhanden. Klicke auf ein Buch zum Bearbeiten.</p>
-    <ul>
+    <p v-if="props.books.length === 0" class="empty-msg">Keine Bücher vorhanden.</p>
+
+    <ul v-else class="list">
       <li
         v-for="book in props.books"
         :key="book.id"
         @click="emit('edit-book', book)"
         class="book-item"
+        :class="{ 'is-selected': book.id === props.selectedBookId }"
       >
-        <strong>{{ book.title }}</strong> von {{ book.author }} aus {{ book.releaseYear }}
+        <span class="book-title">{{ book.title }}</span>
+        <span class="book-info">von {{ book.author }} ({{ book.releaseYear }})</span>
       </li>
     </ul>
   </div>
@@ -30,22 +34,70 @@ const emit = defineEmits<{
 
 <style scoped>
 .book-list-container {
-  margin-top: 20px;
+  background-color: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  color: #fff;
 }
 
-ul {
+h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.empty-msg {
+  color: #888;
+  font-style: italic;
+}
+
+.list {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .book-item {
   cursor: pointer;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  transition: background-color 0.2s;
+  padding: 12px;
+  border-bottom: 1px solid #333;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 
+.book-item:last-child {
+  border-bottom: none;
+}
+
+
+.is-selected .book-title {
+  font-weight: 900;
+  color: #4CAF50;
+  text-decoration: underline;
+}
+
+
 .book-item:hover {
-  background-color: #e0e0e0;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  transform: scale(1.02);
+  border-radius: 4px;
+}
+
+.book-item:hover .book-info {
+  color: #000000;
+}
+
+.book-title {
+  font-size: 1.1em;
+  margin-bottom: 4px;
+}
+
+.book-info {
+  font-size: 0.9em;
+  color: #aaa;
 }
 </style>

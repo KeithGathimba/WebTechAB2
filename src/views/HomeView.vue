@@ -9,10 +9,12 @@ const selectedBook = ref<Book | null>(null);
 
 const fetchBooks = async () => {
   try {
-
-    const timestamp = new Date().getTime();
-    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books?timestamp=${timestamp}`, {
-      method: 'GET'
+    // TRICK: Wir hängen die aktuelle Zeit an (?t=...),
+    // damit der Browser NICHTS aus dem Cache lädt.
+    const timestamp = Date.now();
+    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books?t=${timestamp}`, {
+      method: 'GET',
+      headers: { 'Cache-Control': 'no-cache' } // Doppelte Sicherheit
     });
 
     if (response.ok) {
@@ -24,13 +26,13 @@ const fetchBooks = async () => {
 };
 
 const handleEditRequest = (book: Book) => {
-  console.log("Buch zum Bearbeiten ausgewählt:", book);
   selectedBook.value = book;
 };
 
+// Diese Funktion wird nach dem Löschen oder Erstellen aufgerufen
 const handleFinished = () => {
-  selectedBook.value = null;
-  fetchBooks();
+  selectedBook.value = null; // Formular zurücksetzen
+  fetchBooks(); // Liste SOFORT neu laden
 };
 
 onMounted(fetchBooks);

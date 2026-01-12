@@ -45,15 +45,11 @@ const submitForm = async () => {
   try {
     const response = await fetch(url, {
       method: method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(bookData)
     });
 
-    if (!response.ok) {
-      throw new Error('Fehler beim Speichern');
-    }
+    if (!response.ok) throw new Error('Fehler beim Speichern');
 
     resetForm();
     emit('book-created');
@@ -65,13 +61,10 @@ const submitForm = async () => {
   }
 };
 
-// Neue Funktion zum Löschen
 const deleteBook = async () => {
   if (!props.bookToEdit) return;
 
-  if (!confirm('Möchtest du dieses Buch wirklich löschen?')) {
-    return;
-  }
+  if (!confirm('Möchtest du dieses Buch wirklich löschen?')) return;
 
   try {
     const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit.id}`, {
@@ -79,9 +72,9 @@ const deleteBook = async () => {
     });
 
     if (response.ok) {
-      alert('Buch erfolgreich gelöscht!');
-      resetForm();
       emit('book-deleted');
+      resetForm();
+      alert('Buch erfolgreich gelöscht!');
     } else {
       alert('Fehler beim Löschen des Buches.');
     }
@@ -142,73 +135,15 @@ const deleteBook = async () => {
   color: #fff;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
-
-h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 10px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #ccc;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 4px;
-  background-color: #2c2c2c;
-  border: 1px solid #444;
-  color: #fff;
-  box-sizing: border-box;
-}
-
-input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  background-color: #333;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: opacity 0.2s;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-.btn-save {
-  background-color: #4CAF50;
-  color: white;
-  flex: 1;
-}
-
-.btn-delete {
-  background-color: #c62828;
-  color: white;
-}
-
-.btn-cancel {
-  background-color: #757575;
-  color: white;
-}
+h3 { margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
+input { width: 100%; padding: 10px; border-radius: 4px; background-color: #2c2c2c; border: 1px solid #444; color: #fff; box-sizing: border-box; }
+input:focus { outline: none; border-color: #4CAF50; background-color: #333; }
+.button-group { display: flex; gap: 10px; margin-top: 20px; }
+button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+button:hover { opacity: 0.9; }
+.btn-save { background-color: #4CAF50; color: white; flex: 1; }
+.btn-delete { background-color: #c62828; color: white; }
+.btn-cancel { background-color: #757575; color: white; }
 </style>

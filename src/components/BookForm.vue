@@ -12,13 +12,15 @@ const releaseYear = ref(2024);
 
 const emit = defineEmits(['book-created', 'cancel-edit']);
 
-// Falls bookToEdit geändert wird (z.B. durch Klick in der Liste), füllen wir das Formular
-watch(() => props.bookToEdit, (newBook) => {
-  if (newBook) {
-    title.value = newBook.title;
-    author.value = newBook.author;
-    releaseYear.value = newBook.releaseYear;
+// Überwacht Änderungen am bookToEdit Prop
+watch(() => props.bookToEdit, (newVal) => {
+  if (newVal) {
+    // Bearbeitungsmodus: Felder füllen
+    title.value = newVal.title;
+    author.value = newVal.author;
+    releaseYear.value = newVal.releaseYear;
   } else {
+    // Anlegemodus: Felder leeren
     resetForm();
   }
 }, { immediate: true });
@@ -36,14 +38,16 @@ const submitForm = async () => {
     releaseYear: releaseYear.value
   };
 
+  // Entscheidung ob Update (PUT) oder Neu (POST)
+  const isEdit = !!props.bookToEdit;
+
+  const url = isEdit
+    ? `https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit?.id}`
+    : 'https://webtech-backend-g4ak.onrender.com/api/v1/books';
+
+  const method = isEdit ? 'PUT' : 'POST';
+
   try {
-    const isEdit = !!props.bookToEdit;
-    const url = isEdit
-      ? `https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit?.id}`
-      : 'https://webtech-backend-g4ak.onrender.com/api/v1/books';
-
-    const method = isEdit ? 'PUT' : 'POST';
-
     const response = await fetch(url, {
       method: method,
       headers: {
@@ -57,7 +61,7 @@ const submitForm = async () => {
     }
 
     resetForm();
-    emit('book-created');
+    emit('book-created'); // Signalisiert der HomeView, dass wir fertig sind
     alert(isEdit ? 'Buch erfolgreich aktualisiert!' : 'Buch erfolgreich gespeichert!');
 
   } catch (error) {
@@ -135,6 +139,7 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .btn-save {

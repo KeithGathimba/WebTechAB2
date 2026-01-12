@@ -45,7 +45,6 @@ const getStatusColor = (status: string) => {
 
           <div class="stars" v-if="book.rating > 0">
             <span v-for="n in book.rating" :key="n">★</span>
-            <span v-for="n in (5 - book.rating)" :key="'empty'+n" style="color: #ccc;">★</span>
           </div>
         </div>
       </li>
@@ -68,26 +67,8 @@ ul { list-style-type: none; padding: 0; }
 .book-item:hover { background-color: #f0f0f0; }
 .book-item.active { background-color: #c8e6c9 !important; border-left-color: #2e7d32 !important; }
 
-.book-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
+.book-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
 .author { font-size: 0.9em; color: #666; margin-bottom: 5px; }
-
-.status-badge {
-  padding: 2px 8px;
-  border-radius: 10px;
-  color: white;
-  font-size: 0.75em;
-  font-weight: bold;
-}
-
-
-.stars {
-  color: #FFD700;
-  font-size: 1.1em;
-}
+.status-badge { padding: 2px 8px; border-radius: 10px; color: white; font-size: 0.75em; font-weight: bold; }
+.stars { color: #FFD700; font-size: 1.1em; }
 </style>

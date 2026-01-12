@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { type Book } from '../types/Book';
 
+
 const props = defineProps<{
   bookToEdit: Book | null;
 }>();
@@ -151,25 +152,10 @@ const deleteBook = async () => {
 .form-group { margin-bottom: 15px; }
 label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
 input, select { width: 100%; padding: 10px; border-radius: 4px; background-color: #2c2c2c; border: 1px solid #444; color: #fff; }
-
-
-.star-rating {
-  font-size: 24px;
-  cursor: pointer;
-  display: inline-block;
-}
-.star-rating span {
-  color: #555;
-  transition: color 0.2s;
-  padding: 0 2px;
-}
-.star-rating span.filled {
-  color: #FFD700;
-}
-.star-rating span:hover {
-  color: #ffe066;
-}
-
+.star-rating { font-size: 24px; cursor: pointer; display: inline-block; }
+.star-rating span { color: #555; transition: color 0.2s; padding: 0 2px; }
+.star-rating span.filled { color: #FFD700; }
+.star-rating span:hover { color: #ffe066; }
 .button-group { display: flex; gap: 10px; margin-top: 20px; }
 button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
 .btn-save { background-color: #4CAF50; flex: 1; }

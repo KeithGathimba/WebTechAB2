@@ -9,6 +9,7 @@ const props = defineProps<{
 const title = ref('');
 const author = ref('');
 const releaseYear = ref(2024);
+const status = ref('Offen');
 
 const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
 
@@ -17,6 +18,7 @@ watch(() => props.bookToEdit, (newVal) => {
     title.value = newVal.title;
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
+    status.value = newVal.status || 'Offen';
   } else {
     resetForm();
   }
@@ -26,13 +28,15 @@ const resetForm = () => {
   title.value = '';
   author.value = '';
   releaseYear.value = 2024;
+  status.value = 'Offen';
 };
 
 const submitForm = async () => {
   const bookData = {
     title: title.value,
     author: author.value,
-    releaseYear: releaseYear.value
+    releaseYear: releaseYear.value,
+    status: status.value
   };
 
   const isEdit = !!props.bookToEdit;
@@ -53,35 +57,32 @@ const submitForm = async () => {
 
     resetForm();
     emit('book-created');
-    alert(isEdit ? 'Buch erfolgreich aktualisiert!' : 'Buch erfolgreich gespeichert!');
+    alert(isEdit ? 'Buch aktualisiert!' : 'Buch gespeichert!');
 
   } catch (error) {
     console.error(error);
-    alert('Es gab einen Fehler beim Verarbeiten!');
+    alert('Fehler beim Verarbeiten!');
   }
 };
+
 const deleteBook = async () => {
   if (!props.bookToEdit) return;
-  if (!confirm('Möchtest du dieses Buch wirklich löschen?')) return;
+  if (!confirm('Wirklich löschen?')) return;
 
   try {
     const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit.id}`, {
       method: 'DELETE'
     });
-
     if (response.ok) {
       emit('book-deleted', props.bookToEdit.id);
-
       resetForm();
-      alert('Buch erfolgreich gelöscht!');
+      alert('Buch gelöscht!');
     } else {
-      alert('Fehler beim Löschen des Buches.');
+      alert('Fehler beim Löschen.');
     }
   } catch (error) {
-    console.error("Fehler:", error);
-    alert('Netzwerkfehler beim Löschen.');
+    alert('Netzwerkfehler.');
   }
-
 };
 </script>
 
@@ -89,61 +90,48 @@ const deleteBook = async () => {
   <div class="form-container">
     <h3>{{ props.bookToEdit ? 'Buch bearbeiten' : 'Neues Buch anlegen' }}</h3>
     <form @submit.prevent="submitForm">
+
       <div class="form-group">
         <label for="title">Titel:</label>
-        <input id="title" v-model="title" type="text" required placeholder="Titel des Buches" />
+        <input id="title" v-model="title" type="text" required placeholder="Titel" />
       </div>
 
       <div class="form-group">
         <label for="author">Autor:</label>
-        <input id="author" v-model="author" type="text" required placeholder="Name des Autors" />
+        <input id="author" v-model="author" type="text" required placeholder="Autor" />
       </div>
 
       <div class="form-group">
-        <label for="year">Erscheinungsjahr:</label>
+        <label for="year">Jahr:</label>
         <input id="year" v-model="releaseYear" type="number" required />
       </div>
 
+      <div class="form-group">
+        <label for="status">Status:</label>
+        <select id="status" v-model="status">
+          <option value="Offen">Offen</option>
+          <option value="Steht an">Steht an</option>
+          <option value="Gelesen">Gelesen</option>
+        </select>
+      </div>
+
       <div class="button-group">
-        <button type="submit" class="btn-save">
-          {{ props.bookToEdit ? 'Speichern' : 'Hinzufügen' }}
-        </button>
-
-        <button
-          v-if="props.bookToEdit"
-          type="button"
-          @click="deleteBook"
-          class="btn-delete"
-        >
-          Löschen
-        </button>
-
-        <button v-if="props.bookToEdit" type="button" @click="emit('cancel-edit')" class="btn-cancel">
-          Abbrechen
-        </button>
+        <button type="submit" class="btn-save">{{ props.bookToEdit ? 'Speichern' : 'Hinzufügen' }}</button>
+        <button v-if="props.bookToEdit" type="button" @click="deleteBook" class="btn-delete">Löschen</button>
+        <button v-if="props.bookToEdit" type="button" @click="emit('cancel-edit')" class="btn-cancel">Abbrechen</button>
       </div>
     </form>
   </div>
 </template>
 
 <style scoped>
-.form-container {
-  background-color: #1e1e1e;
-  border: 1px solid #333;
-  padding: 20px;
-  border-radius: 8px;
-  color: #fff;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-h3 { margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+.form-container { background-color: #1e1e1e; padding: 20px; border-radius: 8px; color: #fff; }
 .form-group { margin-bottom: 15px; }
 label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
-input { width: 100%; padding: 10px; border-radius: 4px; background-color: #2c2c2c; border: 1px solid #444; color: #fff; box-sizing: border-box; }
-input:focus { outline: none; border-color: #4CAF50; background-color: #333; }
+input, select { width: 100%; padding: 10px; border-radius: 4px; background-color: #2c2c2c; border: 1px solid #444; color: #fff; }
 .button-group { display: flex; gap: 10px; margin-top: 20px; }
-button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-button:hover { opacity: 0.9; }
-.btn-save { background-color: #4CAF50; color: white; flex: 1; }
-.btn-delete { background-color: #c62828; color: white; }
-.btn-cancel { background-color: #757575; color: white; }
+button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+.btn-save { background-color: #4CAF50; flex: 1; }
+.btn-delete { background-color: #c62828; }
+.btn-cancel { background-color: #757575; }
 </style>

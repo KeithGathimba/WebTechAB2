@@ -7,6 +7,15 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['edit-book']);
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Gelesen': return '#4CAF50';
+    case 'Steht an': return '#FF9800';
+    case 'Offen': return '#2196F3';
+    default: return '#757575'; //
+  }
+};
 </script>
 
 <template>
@@ -21,8 +30,16 @@ const emit = defineEmits(['edit-book']);
         class="book-item"
         :class="{ 'active': book.id === props.selectedBookId }"
       >
-        <span>
-          <strong>{{ book.title }}</strong> von {{ book.author }} ({{ book.releaseYear }})
+        <div class="book-info">
+          <strong>{{ book.title }}</strong>
+          <span class="author">von {{ book.author }} ({{ book.releaseYear }})</span>
+        </div>
+
+        <span
+          class="status-badge"
+          :style="{ backgroundColor: getStatusColor(book.status) }"
+        >
+          {{ book.status || 'Offen' }}
         </span>
       </li>
     </ul>
@@ -30,26 +47,32 @@ const emit = defineEmits(['edit-book']);
 </template>
 
 <style scoped>
-.book-list-container {
-  margin-top: 20px;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
+.book-list-container { margin-top: 20px; }
+ul { list-style-type: none; padding: 0; }
+
 .book-item {
   cursor: pointer;
   padding: 15px;
   border-bottom: 1px solid #eee;
-  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-left: 6px solid transparent;
-}
-.book-item:hover {
-  background-color: #f0f0f0;
+  transition: background-color 0.2s;
 }
 
-.book-item.active {
-  background-color: #c8e6c9 !important;
-  border-left-color: #2e7d32 !important;
+.book-item:hover { background-color: #f0f0f0; }
+.book-item.active { background-color: #c8e6c9 !important; border-left-color: #2e7d32 !important; }
+
+.book-info { display: flex; flex-direction: column; }
+.author { font-size: 0.9em; color: #666; }
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.8em;
+  font-weight: bold;
+  white-space: nowrap;
 }
 </style>

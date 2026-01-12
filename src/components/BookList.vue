@@ -3,6 +3,7 @@ import { type Book } from '../types/Book';
 
 const props = defineProps<{
   books: Book[];
+  selectedBookId?: number;
 }>();
 
 const emit = defineEmits(['edit-book']);
@@ -18,6 +19,7 @@ const emit = defineEmits(['edit-book']);
         :key="book.id"
         @click="emit('edit-book', book)"
         class="book-item"
+        :class="{ 'active': book.id === props.selectedBookId }"
       >
         <span>
           <strong>{{ book.title }}</strong> von {{ book.author }} ({{ book.releaseYear }})
@@ -35,13 +37,22 @@ ul {
   list-style-type: none;
   padding: 0;
 }
+
 .book-item {
   cursor: pointer;
   padding: 10px;
   border-bottom: 1px solid #eee;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
 }
+
+
 .book-item:hover {
-  background-color: #e0e0e0;
+  background-color: #f9f9f9;
+}
+
+.book-item.active {
+  background-color: #e8f5e9;
+  border-left-color: #4CAF50;
 }
 </style>

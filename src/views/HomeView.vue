@@ -9,7 +9,11 @@ const selectedBook = ref<Book | null>(null);
 
 const fetchBooks = async () => {
   try {
-    const response = await fetch('https://webtech-backend-g4ak.onrender.com/api/v1/books');
+    const response = await fetch('https://webtech-backend-g4ak.onrender.com/api/v1/books', {
+      method: 'GET',
+      cache: 'no-store'
+    });
+
     if (response.ok) {
       books.value = await response.json();
     }
@@ -43,6 +47,7 @@ onMounted(fetchBooks);
 
     <BookList
       :books="books"
+      :selected-book-id="selectedBook?.id"
       @edit-book="handleEditRequest"
     />
   </main>

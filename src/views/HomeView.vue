@@ -23,6 +23,27 @@ const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
 };
 
+// NEU: Löschen-Funktion
+const handleDeleteRequest = async (id: number) => {
+  if (selectedBook.value?.id === id) {
+    selectedBook.value = null;
+  }
+
+  try {
+    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      await fetchBooks();
+    } else {
+      console.error("Fehler beim Löschen");
+    }
+  } catch (error) {
+    console.error("Netzwerkfehler beim Löschen:", error);
+  }
+};
+
 const handleFinished = () => {
   selectedBook.value = null;
   fetchBooks();
@@ -49,6 +70,7 @@ onMounted(fetchBooks);
           :books="books"
           :selected-book-id="selectedBook?.id"
           @edit-book="handleEditRequest"
+          @delete-book="handleDeleteRequest"
         />
       </section>
     </div>
@@ -81,7 +103,6 @@ h1 {
   flex: 1;
 }
 
-/* Responsiv: Untereinander bei kleinen Bildschirmen */
 @media (max-width: 768px) {
   .content-wrapper {
     flex-direction: column;

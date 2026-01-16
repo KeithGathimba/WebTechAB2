@@ -35,6 +35,24 @@ const handleBookDeleted = (deletedId: number) => {
   books.value = books.value.filter(book => book.id !== deletedId);
 };
 
+const handleDelete = async (id: number) => {
+  try {
+    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${id}`, {
+      method: 'DELETE'
+    });
+    if (response.ok) {
+      books.value = books.value.filter(book => book.id !== id);
+      if (selectedBook.value?.id === id) {
+        selectedBook.value = null;
+      }
+    } else {
+      alert("Fehler beim Löschen des Buches.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Löschen:", error);
+  }
+};
+
 onMounted(fetchBooks);
 </script>
 
@@ -53,6 +71,7 @@ onMounted(fetchBooks);
       :books="books"
       :selected-book-id="selectedBook?.id"
       @edit-book="handleEditRequest"
+      @delete-book="handleDelete"
     />
   </main>
 </template>

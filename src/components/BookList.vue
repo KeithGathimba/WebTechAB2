@@ -18,7 +18,6 @@ const stats = computed(() => {
   const total = props.books.length;
   const read = props.books.filter(b => b.status === 'Gelesen').length;
   const reading = props.books.filter(b => b.status === 'Steht an').length;
-  const open = props.books.filter(b => b.status === 'Offen' || !b.status).length;
 
   const ratedBooks = props.books.filter(b => b.rating > 0);
   const avgRating = ratedBooks.length > 0
@@ -27,9 +26,10 @@ const stats = computed(() => {
 
   const progressPercent = total > 0 ? Math.round((read / total) * 100) : 0;
 
-  return { total, read, reading, open, avgRating, progressPercent };
+  return { total, read, reading, avgRating, progressPercent };
 });
 
+// Filter- und Sortierlogik
 const filteredAndSortedBooks = computed(() => {
   const filtered = props.books.filter(book => {
     const term = searchQuery.value.toLowerCase();
@@ -65,7 +65,7 @@ const getStatusColor = (status: string) => {
 </script>
 
 <template>
-  <div class="book-list-container">
+  <div class="book-list-container dark-theme">
     <div class="header-section">
       <h2>Meine Bücher</h2>
       <button @click="showStats = !showStats" class="stats-toggle-btn">
@@ -80,15 +80,15 @@ const getStatusColor = (status: string) => {
           <span class="stat-label">Gesamt</span>
         </div>
         <div class="stat-card">
-          <span class="stat-value" style="color: #4CAF50;">{{ stats.read }}</span>
+          <span class="stat-value" style="color: #81c784;">{{ stats.read }}</span>
           <span class="stat-label">Gelesen</span>
         </div>
         <div class="stat-card">
-          <span class="stat-value" style="color: #FF9800;">{{ stats.reading }}</span>
+          <span class="stat-value" style="color: #ffb74d;">{{ stats.reading }}</span>
           <span class="stat-label">Steht an</span>
         </div>
         <div class="stat-card">
-          <span class="stat-value" style="color: #FFD700;">★ {{ stats.avgRating }}</span>
+          <span class="stat-value" style="color: #ffd54f;">★ {{ stats.avgRating }}</span>
           <span class="stat-label">Ø-Rating</span>
         </div>
         <div class="progress-container">
@@ -116,20 +116,12 @@ const getStatusColor = (status: string) => {
     <div class="sort-controls" v-if="props.books.length > 0">
       <span class="sort-label">Sortieren nach:</span>
       <div class="button-group">
-        <button @click="setSort('title')" :class="{ active: sortBy === 'title' }">
-          Titel {{ sortBy === 'title' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
-        </button>
-        <button @click="setSort('author')" :class="{ active: sortBy === 'author' }">
-          Autor {{ sortBy === 'author' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
-        </button>
-        <button @click="setSort('releaseYear')" :class="{ active: sortBy === 'releaseYear' }">
-          Jahr {{ sortBy === 'releaseYear' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
-        </button>
-        <button @click="setSort('status')" :class="{ active: sortBy === 'status' }">
-          Status {{ sortBy === 'status' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
-        </button>
-        <button @click="setSort('rating')" :class="{ active: sortBy === 'rating' }">
-          Sterne {{ sortBy === 'rating' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+        <button v-for="field in (['title', 'author', 'releaseYear', 'status', 'rating'] as const)"
+                :key="field"
+                @click="setSort(field)"
+                :class="{ active: sortBy === field }">
+          {{ field === 'releaseYear' ? 'Jahr' : field === 'rating' ? 'Sterne' : field.charAt(0).toUpperCase() + field.slice(1) }}
+          {{ sortBy === field ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
         </button>
       </div>
     </div>
@@ -164,125 +156,91 @@ const getStatusColor = (status: string) => {
 </template>
 
 <style scoped>
-.book-list-container { margin-top: 20px; }
 
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.dark-theme {
+  background-color: #1a2634;
+  color: #e0e0e0;
+  padding: 20px;
+  border-radius: 12px;
 }
 
+.header-section h2 { color: #ffffff; }
+
 .stats-toggle-btn {
-  background: none;
+  background: transparent;
   border: 1px solid #4CAF50;
   color: #4CAF50;
   padding: 5px 12px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.85em;
-  transition: all 0.2s;
 }
 
-.stats-toggle-btn:hover {
-  background: #4CAF50;
-  color: white;
-}
+.stats-toggle-btn:hover { background: #4CAF50; color: white; }
 
-/* Statistik Dashboard Styling */
+
 .stats-dashboard {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 15px;
-  background: #fdfdfd;
+  background: #253345;
   padding: 20px;
   border-radius: 12px;
-  border: 1px solid #eee;
+  border: 1px solid #34495e;
   margin-bottom: 25px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+.stat-value { font-size: 1.4em; font-weight: bold; color: #ffffff; }
+.stat-label { color: #94a3b8; }
+
+.progress-bar-bg { background: #34495e; }
+.progress-bar-fill { background: #4CAF50; }
+
+
+.search-input {
+  width: 100%;
+  padding: 12px 15px;
+  background: #2c3e50;
+  border: 1px solid #34495e;
+  border-radius: 8px;
+  color: white;
+  outline: none;
 }
 
-.stat-value {
-  font-size: 1.4em;
-  font-weight: bold;
-  color: #333;
+.sort-controls { border-bottom: 1px solid #34495e; }
+.button-group button {
+  background: #2c3e50;
+  border: 1px solid #34495e;
+  color: #bdc3c7;
+  border-radius: 20px;
+  padding: 6px 14px;
+  cursor: pointer;
 }
 
-.stat-label {
-  font-size: 0.75em;
-  color: #888;
-  text-transform: uppercase;
-  margin-top: 4px;
+.button-group button.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #2980b9;
 }
 
-.progress-container {
-  grid-column: 1 / -1;
-  margin-top: 10px;
+.book-item {
+  border-bottom: 1px solid #2c3e50;
+  border-left: 6px solid transparent;
+  transition: all 0.2s;
 }
 
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8em;
-  color: #666;
-  margin-bottom: 5px;
+.book-item:hover { background-color: #2c3e50; }
+
+
+.book-item.active {
+  background-color: #243b55 !important;
+  border-left-color: #3498db !important;
+  box-shadow: inset 0 0 10px rgba(52, 152, 219, 0.2);
 }
 
-.progress-bar-bg {
-  height: 8px;
-  background: #eee;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: #4CAF50;
-  transition: width 0.5s ease-out;
-}
-
+.author { color: #94a3b8; }
+.stars { color: #ffd54f; }
+.empty-message { color: #7f8c8d; }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
-
-
-.search-container { position: relative; margin-bottom: 15px; }
-.search-input {
-  width: 100%;
-  padding: 12px 40px 12px 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  outline: none;
-}
-.search-input:focus { border-color: #4CAF50; }
-.clear-search {
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; color: #999; cursor: pointer;
-}
-
-.sort-controls { margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #eee; }
-.sort-label { display: block; font-size: 0.85em; color: #888; margin-bottom: 10px; }
-.button-group { display: flex; gap: 8px; flex-wrap: wrap; }
-.button-group button {
-  padding: 6px 14px; border: 1px solid #ddd; background: white; border-radius: 20px;
-  cursor: pointer; font-size: 0.85em; transition: all 0.2s;
-}
-.button-group button.active { background-color: #4CAF50; color: white; border-color: #45a049; }
-
-ul { list-style-type: none; padding: 0; }
-.book-item {
-  cursor: pointer; padding: 15px; border-bottom: 1px solid #eee; border-left: 6px solid transparent;
-  transition: background-color 0.2s;
-}
-.book-item:hover { background-color: #f9f9f9; }
-.book-item.active { background-color: #e8f5e9 !important; border-left-color: #4CAF50 !important; }
-.status-badge { padding: 2px 8px; border-radius: 10px; color: white; font-size: 0.75em; font-weight: bold; }
-.stars { color: #FFD700; }
 </style>

@@ -9,7 +9,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['edit-book']);
 
-
 const searchQuery = ref('');
 const sortBy = ref<keyof Book>('title');
 const sortOrder = ref<'asc' | 'desc'>('asc');
@@ -17,25 +16,30 @@ const showStats = ref(false);
 
 const stats = computed(() => {
   const total = props.books.length;
+  if (total === 0) return { total: 0, read: 0, reading: 0, avgRating: '0.0', progressPercent: 0 };
+
   const read = props.books.filter(b => b.status === 'Gelesen').length;
   const reading = props.books.filter(b => b.status === 'Steht an').length;
   const ratedBooks = props.books.filter(b => b.rating > 0);
+
   const avgRating = ratedBooks.length > 0
     ? (ratedBooks.reduce((acc, curr) => acc + curr.rating, 0) / ratedBooks.length).toFixed(1)
     : '0.0';
-  const progressPercent = total > 0 ? Math.round((read / total) * 100) : 0;
+
+  const progressPercent = Math.round((read / total) * 100);
 
   return { total, read, reading, avgRating, progressPercent };
 });
 
 const filteredAndSortedBooks = computed(() => {
-  const filtered = props.books.filter(book => {
+  let result = props.books.filter(book => {
     const term = searchQuery.value.toLowerCase();
     return book.title.toLowerCase().includes(term) ||
       book.author.toLowerCase().includes(term);
   });
 
-  return filtered.sort((a, b) => {
+
+  return result.sort((a, b) => {
     let modifier = sortOrder.value === 'asc' ? 1 : -1;
     if (a[sortBy.value] < b[sortBy.value]) return -1 * modifier;
     if (a[sortBy.value] > b[sortBy.value]) return 1 * modifier;
@@ -54,105 +58,119 @@ const setSort = (field: keyof Book) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Gelesen': return '#4CAF50';
-    case 'Steht an': return '#FF9800';
-    case 'Offen': return '#2196F3';
-    default: return '#757575';
+    case 'Gelesen': return '#4CAF50';  // Grün
+    case 'Steht an': return '#FF9800'; // Orange
+    case 'Offen': return '#2196F3';    // Blau
+    default: return '#9E9E9E';         // Grau
   }
 };
 </script>
 
 <template>
-  <div class="book-list-container dark-theme">
-    <div class="header-section">
-      <h1>Meine Bücher</h1>
-      <button @click="showStats = !showStats" class="stats-toggle-btn">
-        {{ showStats ? 'Statistiken verbergen' : 'Statistiken anzeigen' }}
+  <div class="book-list-container">
+    <div class="list-header">
+      <h2>Meine Sammlung</h2>
+      <button @click="showStats = !showStats" class="toggle-stats-btn">
+        {{ showStats ? 'Statistik verbergen' : 'Statistik anzeigen' }}
       </button>
     </div>
 
-    <transition name="expand">
-      <div v-if="showStats" class="stats-dashboard">
+    <transition name="slide-fade">
+      <div v-if="showStats" class="dashboard-panel">
         <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-value">{{ stats.total }}</span>
+          <div class="stat-box">
+            <span class="stat-number">{{ stats.total }}</span>
             <span class="stat-label">Bücher</span>
           </div>
-          <div class="stat-card">
-            <span class="stat-value text-green">{{ stats.read }}</span>
+          <div class="stat-box">
+            <span class="stat-number text-green">{{ stats.read }}</span>
             <span class="stat-label">Gelesen</span>
           </div>
-          <div class="stat-card">
-            <span class="stat-value text-orange">{{ stats.reading }}</span>
+          <div class="stat-box">
+            <span class="stat-number text-orange">{{ stats.reading }}</span>
             <span class="stat-label">Aktuell</span>
           </div>
-          <div class="stat-card">
-            <span class="stat-value text-yellow">★ {{ stats.avgRating }}</span>
-            <span class="stat-label">Schnitt</span>
+          <div class="stat-box">
+            <span class="stat-number text-yellow">★ {{ stats.avgRating }}</span>
+            <span class="stat-label">Rating</span>
           </div>
         </div>
 
-        <div class="progress-section">
-          <div class="progress-info">
-            <span>Lese-Fortschritt</span>
+        <div class="progress-wrapper">
+          <div class="progress-labels">
+            <span>Lesefortschritt</span>
             <span>{{ stats.progressPercent }}%</span>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" :style="{ width: stats.progressPercent + '%' }"></div>
+          <div class="progress-track">
+            <div class="progress-fill" :style="{ width: stats.progressPercent + '%' }"></div>
           </div>
         </div>
       </div>
     </transition>
 
-    <div class="controls-wrapper">
-      <div class="search-container">
+    <div class="controls-bar">
+      <div class="search-wrapper">
         <input
           v-model="searchQuery"
           type="text"
           placeholder="Titel oder Autor suchen..."
           class="search-input"
         />
-        <button v-if="searchQuery" @click="searchQuery = ''" class="clear-search">✕</button>
+        <span v-if="searchQuery" @click="searchQuery = ''" class="clear-icon">✕</span>
       </div>
 
-      <div class="sort-controls" v-if="props.books.length > 0">
-        <span class="sort-label">Sortieren nach</span>
-        <div class="button-group">
-          <button v-for="field in (['title', 'author', 'releaseYear', 'status', 'rating'] as const)"
-                  :key="field"
-                  @click="setSort(field)"
-                  :class="{ active: sortBy === field }">
-            {{ field === 'releaseYear' ? 'Jahr' : field === 'rating' ? 'Sterne' : field.charAt(0).toUpperCase() + field.slice(1) }}
-            <span class="sort-arrow">{{ sortBy === field ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</span>
-          </button>
+      <div class="sort-wrapper">
+        <span class="sort-label">Sortieren:</span>
+        <div class="sort-buttons">
+          <button
+            @click="setSort('title')"
+            :class="{ active: sortBy === 'title' }"
+          >Titel {{ sortBy === 'title' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</button>
+
+          <button
+            @click="setSort('author')"
+            :class="{ active: sortBy === 'author' }"
+          >Autor {{ sortBy === 'author' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</button>
+
+          <button
+            @click="setSort('releaseYear')"
+            :class="{ active: sortBy === 'releaseYear' }"
+          >Jahr {{ sortBy === 'releaseYear' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</button>
+
+          <button
+            @click="setSort('rating')"
+            :class="{ active: sortBy === 'rating' }"
+          >Sterne {{ sortBy === 'rating' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</button>
         </div>
       </div>
     </div>
 
-    <p v-if="filteredAndSortedBooks.length === 0" class="empty-message">
-      Keine passenden Bücher gefunden.
-    </p>
+    <div v-if="filteredAndSortedBooks.length === 0" class="empty-state">
+      <p>Keine Bücher gefunden.</p>
+    </div>
 
     <ul class="book-list">
       <li
         v-for="book in filteredAndSortedBooks"
         :key="book.id"
         @click="emit('edit-book', book)"
-        class="book-item"
-        :class="{ 'active': book.id === props.selectedBookId }"
+        class="book-card"
+        :class="{ 'selected-card': book.id === props.selectedBookId }"
       >
-        <div class="book-content">
-          <div class="book-header">
-            <span class="title">{{ book.title }}</span>
-            <span class="status-badge" :style="{ backgroundColor: getStatusColor(book.status) }">
+        <div class="card-content">
+          <div class="card-top">
+            <span class="book-title">{{ book.title }}</span>
+            <span class="status-tag" :style="{ backgroundColor: getStatusColor(book.status) }">
               {{ book.status || 'Offen' }}
             </span>
           </div>
-          <div class="book-details">
-            <span class="author">von {{ book.author }}</span>
-            <span class="year">• {{ book.releaseYear }}</span>
+
+          <div class="card-details">
+            <span class="book-author">von {{ book.author }}</span>
+            <span class="book-year">({{ book.releaseYear }})</span>
           </div>
-          <div class="stars" v-if="book.rating > 0">
+
+          <div class="card-rating" v-if="book.rating > 0">
             <span v-for="n in book.rating" :key="n">★</span>
           </div>
         </div>
@@ -163,117 +181,174 @@ const getStatusColor = (status: string) => {
 
 <style scoped>
 
-.dark-theme {
-  --bg-color: #1a2634;
-  --card-bg: #243447;
-  --accent-blue: #3498db;
-  --text-main: #e0e6ed;
-  --text-dim: #94a3b8;
-
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  padding: 40px;
-  border-radius: 16px;
-  max-width: 900px;
-  margin: 0 auto;
+.book-list-container {
+  margin-top: 40px;
+  color: #e0e0e0;
 }
 
-.header-section {
+
+.list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 25px;
 }
 
-h1 { font-size: 2em; margin: 0; letter-spacing: -0.5px; }
+.list-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.toggle-stats-btn {
+  background: transparent;
+  border: 1px solid #4CAF50;
+  color: #4CAF50;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.toggle-stats-btn:hover {
+  background: #4CAF50;
+  color: #ffffff;
+}
 
 
-.stats-dashboard {
-  background: var(--card-bg);
-  padding: 30px;
-  border-radius: 16px;
-  margin-bottom: 40px;
-  border: 1px solid #2d4059;
+.dashboard-panel {
+  background-color: #1e2a38;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 35px;
+  border: 1px solid #2c3e50;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 20px;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
-.stat-card { text-align: center; }
-.stat-value { font-size: 1.8em; font-weight: 700; display: block; }
-.stat-label { font-size: 0.8em; color: var(--text-dim); text-transform: uppercase; margin-top: 8px; }
+.stat-box {
+  display: flex;
+  flex-direction: column;
+}
 
-.progress-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #34495e; }
-.progress-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 500; }
-.progress-bar-bg { height: 12px; background: #1a2634; border-radius: 6px; }
+.stat-number { font-size: 1.8rem; font-weight: bold; }
+.stat-label { font-size: 0.8rem; color: #8899a6; text-transform: uppercase; margin-top: 5px; }
 
+.text-green { color: #66bb6a; }
+.text-orange { color: #ffa726; }
+.text-yellow { color: #fdd835; }
 
-.controls-wrapper { margin-bottom: 30px; }
-.search-container { margin-bottom: 25px; position: relative; }
+.progress-wrapper {
+  margin-top: 15px;
+  border-top: 1px solid #2c3e50;
+  padding-top: 15px;
+}
+.progress-labels { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #b0bec5; }
+.progress-track { background: #2c3e50; height: 10px; border-radius: 5px; overflow: hidden; }
+.progress-fill { background: #42b983; height: 100%; transition: width 0.5s ease; }
+
+.controls-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+  background: #181818;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #333;
+}
+
+.search-wrapper { position: relative; }
 .search-input {
   width: 100%;
-  padding: 16px 20px;
-  background: var(--card-bg);
-  border: 1px solid #34495e;
-  border-radius: 12px;
+  padding: 12px 40px 12px 15px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #252525;
   color: white;
-  font-size: 1.05em;
+  font-size: 1rem;
+}
+.search-input:focus { outline: none; border-color: #42b983; }
+.clear-icon {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; color: #777;
 }
 
-.sort-controls { padding-top: 10px; }
-.sort-label { color: var(--text-dim); font-size: 0.9em; margin-bottom: 12px; display: block; }
-
-.button-group { display: flex; gap: 12px; flex-wrap: wrap; }
-.button-group button {
-  background: transparent;
-  border: 1px solid #34495e;
-  color: var(--text-dim);
-  padding: 8px 18px;
-  border-radius: 25px;
+.sort-wrapper { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+.sort-label { color: #888; font-size: 0.9rem; }
+.sort-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.sort-buttons button {
+  background: #252525;
+  border: 1px solid #333;
+  color: #ccc;
+  padding: 6px 14px;
+  border-radius: 15px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.sort-buttons button:hover { background: #333; }
+.sort-buttons button.active {
+  background: #2c3e50;
+  color: #42b983;
+  border-color: #42b983;
 }
 
-.button-group button.active {
-  background: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+
+.book-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-
-.book-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 15px; }
-
-.book-item {
-  background: var(--card-bg);
-  padding: 24px;
-  border-radius: 12px;
-  border-left: 4px solid transparent;
+.book-card {
+  background-color: #1e2a38;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #2c3e50;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.book-item:hover { transform: translateY(-2px); background: #2d4059; }
-
-
-.book-item.active {
-  background: #2d425a !important;
-  border-left-color: var(--accent-blue) !important;
+.book-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  background-color: #233040;
 }
 
-.book-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-.title { font-size: 1.2em; font-weight: 600; }
-.book-details { color: var(--text-dim); margin-bottom: 12px; display: flex; gap: 8px; }
+
+.selected-card {
+  border-left: 5px solid #42b983;
+  background-color: #1a232e !important;
+  box-shadow: inset 0 0 0 1px #42b983;
+}
+
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.book-title { font-size: 1.2rem; font-weight: bold; color: #fff; }
+.status-tag {
+  font-size: 0.75rem; padding: 4px 10px; border-radius: 12px;
+  color: white; font-weight: 600;
+}
+
+.card-details { font-size: 0.95rem; color: #b0bec5; margin-bottom: 10px; }
+.book-year { margin-left: 5px; color: #78909c; }
+
+.card-rating { color: #fdd835; letter-spacing: 2px; }
+
+.empty-state { text-align: center; color: #666; padding: 40px; font-style: italic; }
 
 
-.text-green { color: #81c784; }
-.text-orange { color: #ffb74d; }
-.text-yellow { color: #ffd54f; }
-
-
-.expand-enter-active, .expand-leave-active { transition: all 0.4s ease; max-height: 300px; overflow: hidden; }
-.expand-enter-from, .expand-leave-to { opacity: 0; max-height: 0; transform: translateY(-10px); }
+.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease-out; overflow: hidden; max-height: 500px; opacity: 1; }
+.slide-fade-enter-from, .slide-fade-leave-to { max-height: 0; opacity: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; }
 </style>

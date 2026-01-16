@@ -15,13 +15,11 @@ const sortOrder = ref<'asc' | 'desc'>('asc');
 const sortedBooks = computed(() => {
   return [...props.books].sort((a, b) => {
     let modifier = sortOrder.value === 'asc' ? 1 : -1;
-
     if (a[sortBy.value] < b[sortBy.value]) return -1 * modifier;
     if (a[sortBy.value] > b[sortBy.value]) return 1 * modifier;
     return 0;
   });
 });
-
 
 const setSort = (field: keyof Book) => {
   if (sortBy.value === field) {
@@ -117,45 +115,52 @@ const getStatusColor = (status: string) => {
 <style scoped>
 .book-list-container { margin-top: 20px; }
 
+
 .sort-controls {
   margin-bottom: 20px;
-  background: #f9f9f9;
-  padding: 10px;
-  border-radius: 8px;
+  background: transparent;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
 }
 
 .sort-label {
   display: block;
   font-size: 0.85em;
-  color: #666;
-  margin-bottom: 8px;
+  color: #888;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .button-group {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .button-group button {
-  padding: 6px 12px;
+  padding: 6px 14px;
   border: 1px solid #ddd;
   background: white;
-  border-radius: 4px;
+  border-radius: 20px;
   cursor: pointer;
-  font-size: 0.9em;
-  transition: all 0.2s;
+  font-size: 0.85em;
+  color: #555;
+  transition: all 0.2s ease;
 }
 
 .button-group button:hover {
-  background-color: #f0f0f0;
+  background-color: #f5f5f5;
+  border-color: #ccc;
 }
 
 .button-group button.active {
-  background-color: #2196F3;
+  background-color: #4CAF50;
   color: white;
-  border-color: #1976D2;
+  border-color: #45a049;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
 
 ul { list-style-type: none; padding: 0; }
 
@@ -167,8 +172,8 @@ ul { list-style-type: none; padding: 0; }
   transition: background-color 0.2s;
 }
 
-.book-item:hover { background-color: #f0f0f0; }
-.book-item.active { background-color: #c8e6c9 !important; border-left-color: #2e7d32 !important; }
+.book-item:hover { background-color: #f9f9f9; }
+.book-item.active { background-color: #e8f5e9 !important; border-left-color: #4CAF50 !important; }
 
 .book-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
 .author { font-size: 0.9em; color: #666; margin-bottom: 5px; }

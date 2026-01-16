@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue';
 import { type Book } from '../types/Book';
 
 const props = defineProps<{
@@ -7,6 +8,29 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['edit-book']);
+
+const sortBy = ref<keyof Book>('title');
+const sortOrder = ref<'asc' | 'desc'>('asc');
+
+const sortedBooks = computed(() => {
+  return [...props.books].sort((a, b) => {
+    let modifier = sortOrder.value === 'asc' ? 1 : -1;
+
+    if (a[sortBy.value] < b[sortBy.value]) return -1 * modifier;
+    if (a[sortBy.value] > b[sortBy.value]) return 1 * modifier;
+    return 0;
+  });
+});
+
+
+const setSort = (field: keyof Book) => {
+  if (sortBy.value === field) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = field;
+    sortOrder.value = 'asc';
+  }
+};
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -21,10 +45,48 @@ const getStatusColor = (status: string) => {
 <template>
   <div class="book-list-container">
     <h2>Meine Bücher</h2>
+
+    <div class="sort-controls" v-if="props.books.length > 0">
+      <span class="sort-label">Sortieren nach:</span>
+      <div class="button-group">
+        <button
+          @click="setSort('title')"
+          :class="{ active: sortBy === 'title' }"
+        >
+          Titel {{ sortBy === 'title' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+        </button>
+        <button
+          @click="setSort('author')"
+          :class="{ active: sortBy === 'author' }"
+        >
+          Autor {{ sortBy === 'author' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+        </button>
+        <button
+          @click="setSort('releaseYear')"
+          :class="{ active: sortBy === 'releaseYear' }"
+        >
+          Jahr {{ sortBy === 'releaseYear' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+        </button>
+        <button
+          @click="setSort('status')"
+          :class="{ active: sortBy === 'status' }"
+        >
+          Status {{ sortBy === 'status' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+        </button>
+        <button
+          @click="setSort('rating')"
+          :class="{ active: sortBy === 'rating' }"
+        >
+          Sterne {{ sortBy === 'rating' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+        </button>
+      </div>
+    </div>
+
     <p v-if="props.books.length === 0">Keine Bücher vorhanden.</p>
+
     <ul>
       <li
-        v-for="book in props.books"
+        v-for="book in sortedBooks"
         :key="book.id"
         @click="emit('edit-book', book)"
         class="book-item"
@@ -54,6 +116,47 @@ const getStatusColor = (status: string) => {
 
 <style scoped>
 .book-list-container { margin-top: 20px; }
+
+.sort-controls {
+  margin-bottom: 20px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.sort-label {
+  display: block;
+  font-size: 0.85em;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.button-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+}
+
+.button-group button:hover {
+  background-color: #f0f0f0;
+}
+
+.button-group button.active {
+  background-color: #2196F3;
+  color: white;
+  border-color: #1976D2;
+}
+
 ul { list-style-type: none; padding: 0; }
 
 .book-item {

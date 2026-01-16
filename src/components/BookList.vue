@@ -12,6 +12,23 @@ const emit = defineEmits(['edit-book']);
 const searchQuery = ref('');
 const sortBy = ref<keyof Book>('title');
 const sortOrder = ref<'asc' | 'desc'>('asc');
+const showStats = ref(false);
+
+const stats = computed(() => {
+  const total = props.books.length;
+  const read = props.books.filter(b => b.status === 'Gelesen').length;
+  const reading = props.books.filter(b => b.status === 'Steht an').length;
+  const open = props.books.filter(b => b.status === 'Offen' || !b.status).length;
+
+  const ratedBooks = props.books.filter(b => b.rating > 0);
+  const avgRating = ratedBooks.length > 0
+    ? (ratedBooks.reduce((acc, curr) => acc + curr.rating, 0) / ratedBooks.length).toFixed(1)
+    : '0.0';
+
+  const progressPercent = total > 0 ? Math.round((read / total) * 100) : 0;
+
+  return { total, read, reading, open, avgRating, progressPercent };
+});
 
 const filteredAndSortedBooks = computed(() => {
   const filtered = props.books.filter(book => {
@@ -49,7 +66,42 @@ const getStatusColor = (status: string) => {
 
 <template>
   <div class="book-list-container">
-    <h2>Meine Bücher</h2>
+    <div class="header-section">
+      <h2>Meine Bücher</h2>
+      <button @click="showStats = !showStats" class="stats-toggle-btn">
+        {{ showStats ? 'Statistiken ausblenden' : 'Statistiken anzeigen' }}
+      </button>
+    </div>
+
+    <transition name="fade">
+      <div v-if="showStats" class="stats-dashboard">
+        <div class="stat-card">
+          <span class="stat-value">{{ stats.total }}</span>
+          <span class="stat-label">Gesamt</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" style="color: #4CAF50;">{{ stats.read }}</span>
+          <span class="stat-label">Gelesen</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" style="color: #FF9800;">{{ stats.reading }}</span>
+          <span class="stat-label">Steht an</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" style="color: #FFD700;">★ {{ stats.avgRating }}</span>
+          <span class="stat-label">Ø-Rating</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-info">
+            <span>Fortschritt</span>
+            <span>{{ stats.progressPercent }}%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" :style="{ width: stats.progressPercent + '%' }"></div>
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <div class="search-container">
       <input
@@ -114,104 +166,123 @@ const getStatusColor = (status: string) => {
 <style scoped>
 .book-list-container { margin-top: 20px; }
 
-.search-container {
-  position: relative;
-  margin-bottom: 15px;
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
+.stats-toggle-btn {
+  background: none;
+  border: 1px solid #4CAF50;
+  color: #4CAF50;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s;
+}
+
+.stats-toggle-btn:hover {
+  background: #4CAF50;
+  color: white;
+}
+
+/* Statistik Dashboard Styling */
+.stats-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 15px;
+  background: #fdfdfd;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 0.75em;
+  color: #888;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.progress-container {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8em;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.progress-bar-bg {
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #4CAF50;
+  transition: width 0.5s ease-out;
+}
+
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+
+.search-container { position: relative; margin-bottom: 15px; }
 .search-input {
   width: 100%;
   padding: 12px 40px 12px 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 1em;
   outline: none;
-  transition: border-color 0.2s;
 }
-
-.search-input:focus {
-  border-color: #4CAF50;
-}
-
+.search-input:focus { border-color: #4CAF50; }
 .clear-search {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #999;
-  cursor: pointer;
-  font-size: 1.2em;
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #999; cursor: pointer;
 }
 
-.empty-message {
-  padding: 20px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-}
-
-
-.sort-controls {
-  margin-bottom: 20px;
-  background: transparent;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.sort-label {
-  display: block;
-  font-size: 0.85em;
-  color: #888;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.button-group {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
+.sort-controls { margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #eee; }
+.sort-label { display: block; font-size: 0.85em; color: #888; margin-bottom: 10px; }
+.button-group { display: flex; gap: 8px; flex-wrap: wrap; }
 .button-group button {
-  padding: 6px 14px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 0.85em;
-  color: #555;
-  transition: all 0.2s ease;
+  padding: 6px 14px; border: 1px solid #ddd; background: white; border-radius: 20px;
+  cursor: pointer; font-size: 0.85em; transition: all 0.2s;
 }
-
-.button-group button:hover {
-  background-color: #f5f5f5;
-}
-
-.button-group button.active {
-  background-color: #4CAF50;
-  color: white;
-  border-color: #45a049;
-}
-
+.button-group button.active { background-color: #4CAF50; color: white; border-color: #45a049; }
 
 ul { list-style-type: none; padding: 0; }
-
 .book-item {
-  cursor: pointer;
-  padding: 15px;
-  border-bottom: 1px solid #eee;
-  border-left: 6px solid transparent;
+  cursor: pointer; padding: 15px; border-bottom: 1px solid #eee; border-left: 6px solid transparent;
   transition: background-color 0.2s;
 }
-
 .book-item:hover { background-color: #f9f9f9; }
 .book-item.active { background-color: #e8f5e9 !important; border-left-color: #4CAF50 !important; }
-
-.book-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-.author { font-size: 0.9em; color: #666; margin-bottom: 5px; }
 .status-badge { padding: 2px 8px; border-radius: 10px; color: white; font-size: 0.75em; font-weight: bold; }
-.stars { color: #FFD700; font-size: 1.1em; }
+.stars { color: #FFD700; }
 </style>

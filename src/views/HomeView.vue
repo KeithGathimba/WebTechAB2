@@ -30,26 +30,30 @@ const handleBookCreated = () => {
   fetchBooks();
 };
 
-const handleBookDeleted = (deletedId: number) => {
+const handleBookDeletedFromForm = (deletedId: number) => {
   selectedBook.value = null;
   books.value = books.value.filter(book => book.id !== deletedId);
 };
 
-const handleDelete = async (id: number) => {
+const handleDeleteFromList = async (id: number) => {
   try {
     const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${id}`, {
       method: 'DELETE'
     });
+
     if (response.ok) {
       books.value = books.value.filter(book => book.id !== id);
+
       if (selectedBook.value?.id === id) {
         selectedBook.value = null;
       }
     } else {
+      console.error("Fehler beim Löschen des Buches (API-Status nicht OK).");
       alert("Fehler beim Löschen des Buches.");
     }
   } catch (error) {
-    console.error("Fehler beim Löschen:", error);
+    console.error("Netzwerkfehler beim Löschen:", error);
+    alert("Netzwerkfehler beim Löschen.");
   }
 };
 
@@ -63,7 +67,7 @@ onMounted(fetchBooks);
     <BookForm
       :book-to-edit="selectedBook"
       @book-created="handleBookCreated"
-      @book-deleted="handleBookDeleted"
+      @book-deleted="handleBookDeletedFromForm"
       @cancel-edit="selectedBook = null"
     />
 
@@ -71,14 +75,14 @@ onMounted(fetchBooks);
       :books="books"
       :selected-book-id="selectedBook?.id"
       @edit-book="handleEditRequest"
-      @delete-book="handleDelete"
+      @delete-book="handleDeleteFromList"
     />
   </main>
 </template>
 
 <style scoped>
 .container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 20px;
 }

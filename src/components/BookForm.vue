@@ -13,11 +13,52 @@ const author = ref('');
 const releaseYear = ref(2024);
 const status = ref<string>(BOOK_STATUS.PLANNED);
 const rating = ref(0);
+const isbn = ref('');
+const isSearching = ref(false);
+
 const notification = ref<{ message: string, type: 'success' | 'error' } | null>(null);
 
 const showNotification = (msg: string, type: 'success' | 'error' = 'success') => {
   notification.value = { message: msg, type };
   setTimeout(() => notification.value = null, 3000);
+};
+
+const fetchBookByIsbn = async () => {
+  if (!isbn.value) return;
+
+  isSearching.value = true;
+  const query = `ISBN:${isbn.value.trim()}`;
+
+  try {
+    const response = await fetch(`https://openlibrary.org/api/books?bibkeys=${query}&jscmd=data&format=json`);
+    const data = await response.json();
+
+    if (data[query]) {
+      const bookData = data[query];
+
+      title.value = bookData.title || '';
+
+      if (bookData.authors && bookData.authors.length > 0) {
+        author.value = bookData.authors[0].name;
+      }
+
+      if (bookData.publish_date) {
+        const yearMatch = bookData.publish_date.match(/\d{4}/);
+        if (yearMatch) {
+          releaseYear.value = parseInt(yearMatch[0]);
+        }
+      }
+
+      showNotification('Buchdaten erfolgreich geladen!', 'success');
+    } else {
+      showNotification('Kein Buch unter dieser ISBN gefunden.', 'error');
+    }
+  } catch (error) {
+    console.error(error);
+    showNotification('Fehler bei der ISBN-Suche.', 'error');
+  } finally {
+    isSearching.value = false;
+  }
 };
 
 watch(() => props.bookToEdit, (newVal) => {
@@ -28,6 +69,7 @@ watch(() => props.bookToEdit, (newVal) => {
     const currentStatus = (newVal.status as string) === 'Offen' ? BOOK_STATUS.READING : newVal.status;
     status.value = currentStatus || BOOK_STATUS.PLANNED;
     rating.value = newVal.rating || 0;
+    isbn.value = '';
   } else {
     resetForm();
   }
@@ -39,6 +81,7 @@ const resetForm = () => {
   releaseYear.value = 2024;
   status.value = BOOK_STATUS.PLANNED;
   rating.value = 0;
+  isbn.value = '';
   notification.value = null;
 };
 
@@ -94,6 +137,21 @@ const submitForm = async () => {
       {{ notification.message }}
     </div>
 
+    <div class="isbn-wrapper" v-if="!props.bookToEdit">
+      <div class="isbn-input-group">
+        <input
+          v-model="isbn"
+          type="text"
+          placeholder="ISBN (z.B. 9783551551672)"
+          @keyup.enter="fetchBookByIsbn"
+        />
+        <button type="button" @click="fetchBookByIsbn" class="btn-search" :disabled="isSearching">
+          {{ isSearching ? '...' : '🔍' }}
+        </button>
+      </div>
+      <small class="hint">ISBN eingeben für Auto-Fill</small>
+    </div>
+
     <form @submit.prevent="submitForm">
       <div class="form-group">
         <label for="title">Titel:</label>
@@ -142,7 +200,6 @@ const submitForm = async () => {
 </template>
 
 <style scoped>
-
 .form-container {
   position: relative;
   background-color: #1e1e1e;
@@ -153,7 +210,43 @@ const submitForm = async () => {
   height: fit-content;
 }
 
-/* X-Button Style */
+/* ISBN Styles */
+.isbn-wrapper {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #333;
+}
+
+.isbn-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-search {
+  padding: 0 15px;
+  background-color: #2196F3;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.2s;
+}
+.btn-search:hover:not(:disabled) {
+  background-color: #1976D2;
+}
+.btn-search:disabled {
+  background-color: #555;
+  cursor: wait;
+}
+
+.hint {
+  display: block;
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 5px;
+}
+
+/* Bestehende Styles */
 .close-btn {
   position: absolute;
   top: 10px;
@@ -167,9 +260,7 @@ const submitForm = async () => {
   padding: 0 5px;
   transition: color 0.2s;
 }
-.close-btn:hover {
-  color: #fff;
-}
+.close-btn:hover { color: #fff; }
 
 .form-group { margin-bottom: 15px; }
 label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
@@ -181,7 +272,7 @@ input, select { width: 100%; padding: 10px; border-radius: 4px; background-color
 .star-rating span:hover { color: #ffe066; }
 
 .button-group { display: flex; gap: 10px; margin-top: 20px; }
-button:not(.close-btn) { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+button:not(.close-btn):not(.btn-search) { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
 .btn-save { background-color: #4CAF50; flex: 1; }
 .btn-cancel { background-color: #757575; }
 

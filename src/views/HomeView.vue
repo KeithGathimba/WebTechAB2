@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import BookForm from '../components/BookForm.vue';
 import BookList from '../components/BookList.vue';
 import type { Book } from '../types/Book';
@@ -20,6 +22,31 @@ const fetchBooks = async () => {
   } catch (error) {
     console.error("Fehler beim Laden der Bücher:", error);
   }
+};
+
+const exportToPdf = () => {
+  const doc = new jsPDF();
+
+  doc.text("Meine Bücherliste", 14, 10);
+
+  const tableBody = books.value.map(book => [
+    book.title,
+    book.author,
+    book.releaseYear.toString(),
+    book.status,
+    '★'.repeat(book.rating)
+  ]);
+
+  autoTable(doc, {
+    head: [['Titel', 'Autor', 'Jahr', 'Status', 'Bewertung']],
+    body: tableBody,
+    startY: 20,
+    theme: 'striped',
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [44, 62, 80] } // Dunkelblau passend zum Theme
+  });
+
+  doc.save('buecherliste.pdf');
 };
 
 const showCreateForm = () => {
@@ -70,7 +97,12 @@ onMounted(fetchBooks);
   <main class="container">
 
     <div class="header-row">
+      <button @click="exportToPdf" class="btn-export" title="Liste als PDF herunterladen">
+        📄 PDF Export
+      </button>
+
       <h1>Bücherverwaltung</h1>
+
       <button v-if="!isFormVisible" @click="showCreateForm" class="btn-create">
         + Neues Buch
       </button>
@@ -119,49 +151,28 @@ onMounted(fetchBooks);
 
 h1 { margin: 0; color: #e0e0e0; text-align: center; }
 
+
+.btn-export {
+  position: absolute;
+  left: 0; /* Links am Rand */
+  background-color: #2c3e50;
+  color: #ccc;
+  border: 1px solid #444;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+.btn-export:hover {
+  background-color: #34495e;
+  color: white;
+  border-color: #666;
+}
+
+
 .btn-create {
   position: absolute;
   right: 0;
   background-color: #4CAF50;
   color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.btn-create:hover { background-color: #43a047; }
-
-
-.content-wrapper {
-  display: flex;
-  gap: 30px;
-  align-items: flex-start;
-}
-
-
-.list-section {
-  flex: 1;
-  min-width: 0;
-  transition: all 0.3s ease;
-}
-
-
-.form-section {
-  width: 350px;
-  flex-shrink: 0;
-}
-
-
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition: all 0.3s ease-out;
-}
-
-.slide-right-enter-from,
-.slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
-}
-</style>

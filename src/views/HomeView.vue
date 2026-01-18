@@ -24,20 +24,17 @@ const fetchBooks = async () => {
   }
 };
 
-// --- PDF EXPORT FUNKTION ---
 const exportToPdf = () => {
   const doc = new jsPDF();
 
-  // Titel des Dokuments
   doc.text("Meine Bücherliste", 14, 10);
 
-  // Daten für die Tabelle aufbereiten
   const tableBody = books.value.map(book => [
     book.title,
     book.author,
     book.releaseYear.toString(),
     book.status,
-    '★'.repeat(book.rating)
+    `${book.rating} / 5`
   ]);
 
   autoTable(doc, {

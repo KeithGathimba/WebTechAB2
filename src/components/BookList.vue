@@ -31,15 +31,27 @@ const stats = computed(() => {
 const filteredAndSortedBooks = computed(() => {
   let result = props.books.filter(book => {
     const term = searchQuery.value.toLowerCase();
-    const matchesSearch = book.title.toLowerCase().includes(term) || book.author.toLowerCase().includes(term);
+    const matchesSearch = book.title.toLowerCase().includes(term) ||
+      book.author.toLowerCase().includes(term);
+
     const matchesFilter = filterStatus.value === 'Alle' || book.status === filterStatus.value;
+
     return matchesSearch && matchesFilter;
   });
 
   return result.sort((a, b) => {
     let modifier = sortOrder.value === 'asc' ? 1 : -1;
-    if (a[sortBy.value] < b[sortBy.value]) return -1 * modifier;
-    if (a[sortBy.value] > b[sortBy.value]) return 1 * modifier;
+
+    const valA = a[sortBy.value];
+    const valB = b[sortBy.value];
+
+    if (valA === undefined && valB === undefined) return 0;
+    if (valA === undefined) return 1;
+    if (valB === undefined) return -1;
+
+
+    if (valA < valB) return -1 * modifier;
+    if (valA > valB) return 1 * modifier;
     return 0;
   });
 });

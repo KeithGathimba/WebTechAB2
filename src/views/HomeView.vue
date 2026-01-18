@@ -24,11 +24,14 @@ const fetchBooks = async () => {
   }
 };
 
+// --- PDF EXPORT FUNKTION ---
 const exportToPdf = () => {
   const doc = new jsPDF();
 
+  // Titel des Dokuments
   doc.text("Meine Bücherliste", 14, 10);
 
+  // Daten für die Tabelle aufbereiten
   const tableBody = books.value.map(book => [
     book.title,
     book.author,
@@ -43,7 +46,7 @@ const exportToPdf = () => {
     startY: 20,
     theme: 'striped',
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [44, 62, 80] } // Dunkelblau passend zum Theme
+    headStyles: { fillColor: [44, 62, 80] }
   });
 
   doc.save('buecherliste.pdf');
@@ -154,7 +157,7 @@ h1 { margin: 0; color: #e0e0e0; text-align: center; }
 
 .btn-export {
   position: absolute;
-  left: 0; /* Links am Rand */
+  left: 0;
   background-color: #2c3e50;
   color: #ccc;
   border: 1px solid #444;
@@ -176,5 +179,40 @@ h1 { margin: 0; color: #e0e0e0; text-align: center; }
   right: 0;
   background-color: #4CAF50;
   color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-create:hover { background-color: #43a047; }
+
+.content-wrapper {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+.list-section {
+  flex: 1;
+  min-width: 0;
+  transition: all 0.3s ease;
+}
+
+.form-section {
+  width: 350px;
+  flex-shrink: 0;
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
 }
 </style>

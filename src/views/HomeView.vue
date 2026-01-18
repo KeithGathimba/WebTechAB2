@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import BookForm from '../components/BookForm.vue';
 import BookList from '../components/BookList.vue';
 import type { Book } from '../types/Book';
+import { BOOK_STATUS } from '../types/Book';
 
 const books = ref<Book[]>([]);
 const selectedBook = ref<Book | null>(null);
@@ -22,9 +23,13 @@ const fetchBooks = async () => {
   }
 };
 
-const showCreateForm = () => {
-  selectedBook.value = null;
-  isFormVisible.value = true;
+const toggleForm = () => {
+  if (isFormVisible.value) {
+    closeForm();
+  } else {
+    selectedBook.value = null;
+    isFormVisible.value = true;
+  }
 };
 
 const handleEditRequest = (book: Book) => {
@@ -45,8 +50,7 @@ const closeForm = () => {
 };
 
 const handleBookDeletedFromForm = (deletedId: number) => {
-  selectedBook.value = null;
-  isFormVisible.value = false;
+  closeForm();
   books.value = books.value.filter(book => book.id !== deletedId);
 };
 
@@ -58,18 +62,14 @@ const handleDeleteFromList = async (id: number) => {
 
     if (response.ok) {
       books.value = books.value.filter(book => book.id !== id);
-
       if (selectedBook.value?.id === id) {
-        selectedBook.value = null;
-        isFormVisible.value = false;
+        closeForm();
       }
     } else {
-      console.error("Fehler beim Löschen des Buches (API-Status nicht OK).");
       alert("Fehler beim Löschen des Buches.");
     }
   } catch (error) {
     console.error("Netzwerkfehler beim Löschen:", error);
-    alert("Netzwerkfehler beim Löschen.");
   }
 };
 
@@ -80,13 +80,14 @@ onMounted(fetchBooks);
   <main class="container">
     <h1>Bücherverwaltung</h1>
 
-    <div v-if="!isFormVisible" class="action-bar">
-      <button @click="showCreateForm" class="btn-create">
-        + Neues Buch anlegen
-      </button>
+    <div class="toggle-header" @click="toggleForm">
+      <span class="toggle-title">
+        {{ selectedBook ? 'Buch bearbeiten' : 'Neues Buch anlegen' }}
+      </span>
+      <span class="arrow" :class="{ 'arrow-down': isFormVisible }">▶</span>
     </div>
 
-    <div v-if="isFormVisible" class="form-wrapper">
+    <div v-show="isFormVisible" class="form-wrapper">
       <BookForm
         :book-to-edit="selectedBook"
         @book-created="handleBookCreated"
@@ -113,42 +114,51 @@ onMounted(fetchBooks);
 
 h1 {
   text-align: center;
-  color: #ffffff;
+  color: #e0e0e0;
   margin-bottom: 30px;
 }
 
-.action-bar {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
-}
 
-.btn-create {
-  background-color: #4CAF50;
+.toggle-header {
+  background-color: #2c3e50;
   color: white;
-  border: none;
-  padding: 12px 24px;
+  padding: 15px 20px;
   border-radius: 8px;
-  font-size: 1rem;
-  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+  user-select: none;
 }
 
-.btn-create:hover {
-  background-color: #43a047;
+.toggle-header:hover {
+  background-color: #34495e;
 }
 
-.btn-create:active {
-  transform: scale(0.98);
+.toggle-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.arrow {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.arrow-down {
+  transform: rotate(90deg);
 }
 
 .form-wrapper {
   margin-bottom: 40px;
-  animation: fadeIn 0.3s ease-in-out;
+
+  animation: slideDown 0.3s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }

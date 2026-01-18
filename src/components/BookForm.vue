@@ -1,27 +1,33 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { type Book } from '../types/Book';
-
+import { type Book, BOOK_STATUS } from '../types/Book';
 
 const props = defineProps<{
   bookToEdit: Book | null;
 }>();
 
+const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
+
 const title = ref('');
 const author = ref('');
 const releaseYear = ref(2024);
-const status = ref('Steht an');
+const status = ref<string>(BOOK_STATUS.PLANNED);
 const rating = ref(0);
+const notification = ref<{ message: string, type: 'success' | 'error' } | null>(null);
 
-const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
+// Hilfsfunktion für Benachrichtigungen
+const showNotification = (msg: string, type: 'success' | 'error' = 'success') => {
+  notification.value = { message: msg, type };
+  setTimeout(() => notification.value = null, 3000);
+};
 
 watch(() => props.bookToEdit, (newVal) => {
   if (newVal) {
     title.value = newVal.title;
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
-    const currentStatus = newVal.status === 'Offen' ? 'Lesend' : newVal.status;
-    status.value = currentStatus || 'Steht an';
+    const currentStatus = newVal.status === 'Offen' ? BOOK_STATUS.READING : newVal.status;
+    status.value = currentStatus || BOOK_STATUS.PLANNED;
     rating.value = newVal.rating || 0;
   } else {
     resetForm();
@@ -32,8 +38,9 @@ const resetForm = () => {
   title.value = '';
   author.value = '';
   releaseYear.value = 2024;
-  status.value = 'Steht an';
+  status.value = BOOK_STATUS.PLANNED;
   rating.value = 0;
+  notification.value = null;
 };
 
 const setRating = (stars: number) => {
@@ -41,12 +48,14 @@ const setRating = (stars: number) => {
 };
 
 const submitForm = async () => {
+  const finalRating = status.value === BOOK_STATUS.PLANNED ? 0 : rating.value;
+
   const bookData = {
     title: title.value,
     author: author.value,
     releaseYear: releaseYear.value,
     status: status.value,
-    rating: rating.value
+    rating: finalRating
   };
 
   const isEdit = !!props.bookToEdit;
@@ -65,19 +74,19 @@ const submitForm = async () => {
 
     if (!response.ok) throw new Error('Fehler beim Speichern');
 
-    resetForm();
+    if (!isEdit) resetForm();
     emit('book-created');
-    alert(isEdit ? 'Buch aktualisiert!' : 'Buch gespeichert!');
+    showNotification(isEdit ? 'Buch erfolgreich aktualisiert!' : 'Buch erfolgreich gespeichert!');
 
   } catch (error) {
     console.error(error);
-    alert('Fehler beim Verarbeiten!');
+    showNotification('Fehler beim Speichern des Buches.', 'error');
   }
 };
 
 const deleteBook = async () => {
   if (!props.bookToEdit) return;
-  if (!confirm('Wirklich löschen?')) return;
+  if (!confirm('Wirklich unwiderruflich löschen?')) return;
 
   try {
     const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit.id}`, {
@@ -86,12 +95,11 @@ const deleteBook = async () => {
     if (response.ok) {
       emit('book-deleted', props.bookToEdit.id);
       resetForm();
-      alert('Buch gelöscht!');
     } else {
-      alert('Fehler beim Löschen.');
+      showNotification('Fehler beim Löschen.', 'error');
     }
   } catch (error) {
-    alert('Netzwerkfehler.');
+    showNotification('Netzwerkfehler.', 'error');
   }
 };
 </script>
@@ -99,6 +107,11 @@ const deleteBook = async () => {
 <template>
   <div class="form-container">
     <h3>{{ props.bookToEdit ? 'Buch bearbeiten' : 'Neues Buch anlegen' }}</h3>
+
+    <div v-if="notification" :class="['notification', notification.type]">
+      {{ notification.message }}
+    </div>
+
     <form @submit.prevent="submitForm">
 
       <div class="form-group">
@@ -119,13 +132,13 @@ const deleteBook = async () => {
       <div class="form-group">
         <label for="status">Status:</label>
         <select id="status" v-model="status">
-          <option value="Steht an">Steht an</option>
-          <option value="Lesend">Lesend</option>
-          <option value="Gelesen">Gelesen</option>
+          <option :value="BOOK_STATUS.PLANNED">{{ BOOK_STATUS.PLANNED }}</option>
+          <option :value="BOOK_STATUS.READING">{{ BOOK_STATUS.READING }}</option>
+          <option :value="BOOK_STATUS.READ">{{ BOOK_STATUS.READ }}</option>
         </select>
       </div>
 
-      <div class="form-group" v-if="status !== 'Steht an'">
+      <div class="form-group" v-if="status !== BOOK_STATUS.PLANNED">
         <label>Bewertung:</label>
         <div class="star-rating">
           <span
@@ -153,13 +166,19 @@ const deleteBook = async () => {
 .form-group { margin-bottom: 15px; }
 label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
 input, select { width: 100%; padding: 10px; border-radius: 4px; background-color: #2c2c2c; border: 1px solid #444; color: #fff; }
+
 .star-rating { font-size: 24px; cursor: pointer; display: inline-block; }
 .star-rating span { color: #555; transition: color 0.2s; padding: 0 2px; }
 .star-rating span.filled { color: #FFD700; }
 .star-rating span:hover { color: #ffe066; }
+
 .button-group { display: flex; gap: 10px; margin-top: 20px; }
 button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
 .btn-save { background-color: #4CAF50; flex: 1; }
 .btn-delete { background-color: #c62828; }
 .btn-cancel { background-color: #757575; }
+
+.notification { padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+.notification.success { background-color: rgba(76, 175, 80, 0.2); border: 1px solid #4CAF50; color: #4CAF50; }
+.notification.error { background-color: rgba(198, 40, 40, 0.2); border: 1px solid #c62828; color: #ef5350; }
 </style>

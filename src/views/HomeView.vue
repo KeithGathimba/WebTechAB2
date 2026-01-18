@@ -22,13 +22,9 @@ const fetchBooks = async () => {
   }
 };
 
-const toggleForm = () => {
-  if (isFormVisible.value) {
-    closeForm();
-  } else {
-    selectedBook.value = null;
-    isFormVisible.value = true;
-  }
+const showCreateForm = () => {
+  selectedBook.value = null;
+  isFormVisible.value = true;
 };
 
 const handleEditRequest = (book: Book) => {
@@ -39,7 +35,7 @@ const handleEditRequest = (book: Book) => {
 
 const handleBookCreated = () => {
   selectedBook.value = null;
-  isFormVisible.value = false;
+  isFormVisible.value = false; // Formular wieder ausblenden
   fetchBooks();
 };
 
@@ -65,12 +61,10 @@ const handleDeleteFromList = async (id: number) => {
         closeForm();
       }
     } else {
-      console.error("Fehler beim Löschen des Buches (API-Status nicht OK).");
-      alert("Fehler beim Löschen des Buches.");
+      alert("Fehler beim Löschen.");
     }
   } catch (error) {
-    console.error("Netzwerkfehler beim Löschen:", error);
-    alert("Netzwerkfehler beim Löschen.");
+    console.error(error);
   }
 };
 
@@ -79,16 +73,16 @@ onMounted(fetchBooks);
 
 <template>
   <main class="container">
-    <h1>Bücherverwaltung</h1>
 
-    <div class="toggle-header" @click="toggleForm">
-      <span class="toggle-title">
-        {{ selectedBook ? 'Buch bearbeiten' : 'Neues Buch anlegen' }}
-      </span>
-      <span class="arrow" :class="{ 'arrow-down': isFormVisible }">▶</span>
+    <div class="header-row">
+      <h1>Bücherverwaltung</h1>
+
+      <button v-if="!isFormVisible" @click="showCreateForm" class="btn-create">
+        + Neues Buch
+      </button>
     </div>
 
-    <div v-show="isFormVisible" class="form-wrapper">
+    <div v-if="isFormVisible" class="form-wrapper">
       <BookForm
         :book-to-edit="selectedBook"
         @book-created="handleBookCreated"
@@ -113,57 +107,48 @@ onMounted(fetchBooks);
   padding: 20px;
 }
 
-h1 {
-  text-align: center;
-  color: #e0e0e0;
-  margin-bottom: 30px;
-}
 
-
-.toggle-header {
-  background-color: #2c3e50;
-  color: white;
-  padding: 15px 20px;
-  border-radius: 8px;
-  cursor: pointer;
+.header-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
-  transition: background-color 0.2s;
-  user-select: none;
-  border: 1px solid #444;
+  position: relative;
+  margin-bottom: 30px;
+  min-height: 50px;
 }
 
-.toggle-header:hover {
-  background-color: #34495e;
+h1 {
+  margin: 0;
+  color: #e0e0e0;
+  text-align: center;
 }
 
-.toggle-title {
+
+.btn-create {
+  position: absolute;
+  right: 0;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
   font-weight: bold;
-  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.95rem;
 }
 
-
-.arrow {
-  font-size: 1.2rem;
-  transition: transform 0.3s ease;
-  display: inline-block;
-  color: #4CAF50;
-}
-
-
-.arrow-down {
-  transform: rotate(90deg);
+.btn-create:hover {
+  background-color: #43a047;
 }
 
 
 .form-wrapper {
   margin-bottom: 40px;
-  animation: slideDown 0.3s ease-out;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-@keyframes slideDown {
+@keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }

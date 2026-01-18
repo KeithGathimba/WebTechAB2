@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue';
 import BookForm from '../components/BookForm.vue';
 import BookList from '../components/BookList.vue';
 import type { Book } from '../types/Book';
-import { BOOK_STATUS } from '../types/Book';
 
 const books = ref<Book[]>([]);
 const selectedBook = ref<Book | null>(null);
@@ -66,10 +65,12 @@ const handleDeleteFromList = async (id: number) => {
         closeForm();
       }
     } else {
+      console.error("Fehler beim Löschen des Buches (API-Status nicht OK).");
       alert("Fehler beim Löschen des Buches.");
     }
   } catch (error) {
     console.error("Netzwerkfehler beim Löschen:", error);
+    alert("Netzwerkfehler beim Löschen.");
   }
 };
 
@@ -131,6 +132,7 @@ h1 {
   margin-bottom: 20px;
   transition: background-color 0.2s;
   user-select: none;
+  border: 1px solid #444;
 }
 
 .toggle-header:hover {
@@ -142,19 +144,22 @@ h1 {
   font-size: 1.1rem;
 }
 
+
 .arrow {
   font-size: 1.2rem;
   transition: transform 0.3s ease;
   display: inline-block;
+  color: #4CAF50;
 }
+
 
 .arrow-down {
   transform: rotate(90deg);
 }
 
+
 .form-wrapper {
   margin-bottom: 40px;
-
   animation: slideDown 0.3s ease-out;
 }
 

@@ -7,7 +7,7 @@ const props = defineProps<{
   selectedBookId?: number;
 }>();
 
-const emit = defineEmits(['edit-book', 'delete-book']);
+const emit = defineEmits(['edit-book', 'delete-book', 'update-status']);
 
 const searchQuery = ref('');
 const filterStatus = ref<string>('Alle');
@@ -15,6 +15,23 @@ const sortBy = ref<keyof Book>('title');
 const sortOrder = ref<'asc' | 'desc'>('asc');
 const showStats = ref(false);
 const viewMode = ref<'list' | 'board'>('list');
+
+const draggedBook = ref<Book | null>(null);
+
+const startDrag = (event: DragEvent, book: Book) => {
+  draggedBook.value = book;
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.effectAllowed = 'move';
+  }
+};
+
+const onDrop = (newStatus: string) => {
+  if (draggedBook.value && draggedBook.value.status !== newStatus) {
+    emit('update-status', draggedBook.value, newStatus);
+  }
+  draggedBook.value = null;
+};
 
 const stats = computed(() => {
   const total = props.books.length;
@@ -82,9 +99,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// NEU: Link generieren
 const getOpenLibraryUrl = (isbn: string) => {
-  // Entfernt evtl. Bindestriche für die URL, sicherheitshalber
   const cleanIsbn = isbn.replace(/-/g, '');
   return `https://openlibrary.org/isbn/${cleanIsbn}`;
 };
@@ -175,25 +190,17 @@ const getOpenLibraryUrl = (isbn: string) => {
               </div>
 
               <div class="action-buttons">
-                <a
-                  v-if="book.isbn"
-                  :href="getOpenLibraryUrl(book.isbn)"
-                  target="_blank"
-                  class="icon-btn link-btn"
-                  title="Auf OpenLibrary ansehen"
-                  @click.stop
-                >
+                <a v-if="book.isbn" :href="getOpenLibraryUrl(book.isbn)" target="_blank" class="icon-btn link-btn" title="Auf OpenLibrary ansehen" @click.stop>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </a>
-
                 <button class="icon-btn delete-btn" @click.stop="requestDelete(book)" title="Buch löschen">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
                 </button>
               </div>
-
             </div>
+
             <div class="card-details">
               <span class="book-author">von {{ book.author }}</span>
               <span class="book-year">({{ book.releaseYear }})</span>
@@ -202,14 +209,13 @@ const getOpenLibraryUrl = (isbn: string) => {
             <div class="card-rating" v-if="book.status !== BOOK_STATUS.PLANNED">
               <span v-for="n in 5" :key="n" :class="n <= book.rating ? 'star-filled' : 'star-empty'">★</span>
             </div>
-
           </div>
         </div>
       </li>
     </ul>
 
     <div v-else class="kanban-board">
-      <div class="kanban-column">
+      <div class="kanban-column" @dragover.prevent @dragenter.prevent @drop="onDrop(BOOK_STATUS.PLANNED)">
         <h3 class="column-title" style="border-top-color: #FF9800;">{{ BOOK_STATUS.PLANNED }}</h3>
         <div class="kanban-cards">
           <div
@@ -218,6 +224,8 @@ const getOpenLibraryUrl = (isbn: string) => {
             class="kanban-card"
             :class="{ 'selected-card': book.id === props.selectedBookId }"
             @click="emit('edit-book', book)"
+            draggable="true"
+            @dragstart="startDrag($event, book)"
           >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
@@ -231,7 +239,7 @@ const getOpenLibraryUrl = (isbn: string) => {
         </div>
       </div>
 
-      <div class="kanban-column">
+      <div class="kanban-column" @dragover.prevent @dragenter.prevent @drop="onDrop(BOOK_STATUS.READING)">
         <h3 class="column-title" style="border-top-color: #2196F3;">{{ BOOK_STATUS.READING }}</h3>
         <div class="kanban-cards">
           <div
@@ -240,6 +248,8 @@ const getOpenLibraryUrl = (isbn: string) => {
             class="kanban-card"
             :class="{ 'selected-card': book.id === props.selectedBookId }"
             @click="emit('edit-book', book)"
+            draggable="true"
+            @dragstart="startDrag($event, book)"
           >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
@@ -256,7 +266,7 @@ const getOpenLibraryUrl = (isbn: string) => {
         </div>
       </div>
 
-      <div class="kanban-column">
+      <div class="kanban-column" @dragover.prevent @dragenter.prevent @drop="onDrop(BOOK_STATUS.READ)">
         <h3 class="column-title" style="border-top-color: #4CAF50;">{{ BOOK_STATUS.READ }}</h3>
         <div class="kanban-cards">
           <div
@@ -265,6 +275,8 @@ const getOpenLibraryUrl = (isbn: string) => {
             class="kanban-card"
             :class="{ 'selected-card': book.id === props.selectedBookId }"
             @click="emit('edit-book', book)"
+            draggable="true"
+            @dragstart="startDrag($event, book)"
           >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
@@ -342,10 +354,7 @@ const getOpenLibraryUrl = (isbn: string) => {
 .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .card-header-left { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
 
-
 .action-buttons { display: flex; gap: 8px; align-items: center; }
-
-
 .icon-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
 .delete-btn { color: #ef5350; }
 .delete-btn:hover { background-color: rgba(239, 83, 80, 0.15); }
@@ -371,8 +380,10 @@ const getOpenLibraryUrl = (isbn: string) => {
 .kanban-column { background-color: #1e1e1e; border-radius: 12px; padding: 15px; border: 1px solid #333; }
 .column-title { margin: 0 0 15px 0; font-size: 1.1rem; color: #e0e0e0; text-align: center; border-top: 3px solid #666; padding-top: 10px; }
 .kanban-cards { display: flex; flex-direction: column; gap: 10px; }
-.kanban-card { background-color: #2c3e50; padding: 10px; border-radius: 8px; cursor: pointer; transition: transform 0.2s, background 0.2s; border: 1px solid #444; display: flex; gap: 10px; align-items: center; }
+.kanban-card { background-color: #2c3e50; padding: 10px; border-radius: 8px; cursor: grab; transition: transform 0.2s, background 0.2s; border: 1px solid #444; display: flex; gap: 10px; align-items: center; }
 .kanban-card:hover { transform: translateY(-3px); background-color: #34495e; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+.kanban-card:active { cursor: grabbing; }
+
 .kanban-cover { width: 40px; height: 60px; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
 .kanban-cover img { width: 100%; height: 100%; object-fit: cover; }
 .kanban-content { flex: 1; min-width: 0; }

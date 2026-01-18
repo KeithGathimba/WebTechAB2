@@ -14,6 +14,7 @@ const releaseYear = ref(2024);
 const status = ref<string>(BOOK_STATUS.PLANNED);
 const rating = ref(0);
 const isbn = ref('');
+const coverUrl = ref('');
 const isSearching = ref(false);
 
 const notification = ref<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -37,25 +38,27 @@ const fetchBookByIsbn = async () => {
       const bookData = data[query];
 
       title.value = bookData.title || '';
-
       if (bookData.authors && bookData.authors.length > 0) {
         author.value = bookData.authors[0].name;
       }
-
       if (bookData.publish_date) {
         const yearMatch = bookData.publish_date.match(/\d{4}/);
-        if (yearMatch) {
-          releaseYear.value = parseInt(yearMatch[0]);
-        }
+        if (yearMatch) releaseYear.value = parseInt(yearMatch[0]);
       }
 
-      showNotification('Buchdaten erfolgreich geladen!', 'success');
+      if (bookData.cover) {
+        coverUrl.value = bookData.cover.medium || bookData.cover.large || '';
+      } else {
+        coverUrl.value = `https://covers.openlibrary.org/b/isbn/${isbn.value.trim()}-M.jpg`;
+      }
+
+      showNotification('Buch gefunden!', 'success');
     } else {
-      showNotification('Kein Buch unter dieser ISBN gefunden.', 'error');
+      showNotification('Kein Buch gefunden.', 'error');
     }
   } catch (error) {
     console.error(error);
-    showNotification('Fehler bei der ISBN-Suche.', 'error');
+    showNotification('Fehler bei der Suche.', 'error');
   } finally {
     isSearching.value = false;
   }
@@ -66,10 +69,11 @@ watch(() => props.bookToEdit, (newVal) => {
     title.value = newVal.title;
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
-    const currentStatus = (newVal.status as string) === 'Offen' ? BOOK_STATUS.READING : newVal.status;
+    const currentStatus = newVal.status === 'Offen' ? BOOK_STATUS.READING : newVal.status;
     status.value = currentStatus || BOOK_STATUS.PLANNED;
     rating.value = newVal.rating || 0;
-    isbn.value = '';
+    isbn.value = newVal.isbn || '';
+    coverUrl.value = newVal.coverUrl || '';
   } else {
     resetForm();
   }
@@ -82,6 +86,7 @@ const resetForm = () => {
   status.value = BOOK_STATUS.PLANNED;
   rating.value = 0;
   isbn.value = '';
+  coverUrl.value = '';
   notification.value = null;
 };
 
@@ -97,7 +102,9 @@ const submitForm = async () => {
     author: author.value,
     releaseYear: releaseYear.value,
     status: status.value,
-    rating: finalRating
+    rating: finalRating,
+    isbn: isbn.value,
+    coverUrl: coverUrl.value
   };
 
   const isEdit = !!props.bookToEdit;
@@ -142,7 +149,7 @@ const submitForm = async () => {
         <input
           v-model="isbn"
           type="text"
-          placeholder="ISBN (z.B. 9783551551672)"
+          placeholder="ISBN (z.B. 9780132350884)"
           @keyup.enter="fetchBookByIsbn"
         />
         <button type="button" @click="fetchBookByIsbn" class="btn-search" :disabled="isSearching">
@@ -169,6 +176,11 @@ const submitForm = async () => {
       </div>
 
       <div class="form-group">
+        <label for="cover">Cover URL (optional):</label>
+        <input id="cover" v-model="coverUrl" type="text" placeholder="http://..." />
+      </div>
+
+      <div class="form-group">
         <label for="status">Status:</label>
         <select id="status" v-model="status">
           <option :value="BOOK_STATUS.PLANNED">{{ BOOK_STATUS.PLANNED }}</option>
@@ -180,14 +192,7 @@ const submitForm = async () => {
       <div class="form-group" v-if="status !== BOOK_STATUS.PLANNED">
         <label>Bewertung:</label>
         <div class="star-rating">
-          <span
-            v-for="star in 5"
-            :key="star"
-            @click="setRating(star)"
-            :class="{ 'filled': star <= rating }"
-          >
-            ★
-          </span>
+          <span v-for="star in 5" :key="star" @click="setRating(star)" :class="{ 'filled': star <= rating }">★</span>
         </div>
       </div>
 
@@ -210,56 +215,15 @@ const submitForm = async () => {
   height: fit-content;
 }
 
-/* ISBN Styles */
-.isbn-wrapper {
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #333;
-}
 
-.isbn-input-group {
-  display: flex;
-  gap: 10px;
-}
+.isbn-wrapper { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #333; }
+.isbn-input-group { display: flex; gap: 10px; }
+.btn-search { padding: 0 15px; background-color: #2196F3; border: none; border-radius: 4px; cursor: pointer; font-size: 1.2rem; }
+.btn-search:disabled { background-color: #555; }
+.hint { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
 
-.btn-search {
-  padding: 0 15px;
-  background-color: #2196F3;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1.2rem;
-  transition: background 0.2s;
-}
-.btn-search:hover:not(:disabled) {
-  background-color: #1976D2;
-}
-.btn-search:disabled {
-  background-color: #555;
-  cursor: wait;
-}
 
-.hint {
-  display: block;
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 5px;
-}
-
-/* Bestehende Styles */
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  border: none;
-  color: #888;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 5px;
-  transition: color 0.2s;
-}
+.close-btn { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #888; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 5px; }
 .close-btn:hover { color: #fff; }
 
 .form-group { margin-bottom: 15px; }

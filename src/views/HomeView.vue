@@ -6,6 +6,7 @@ import type { Book } from '../types/Book';
 
 const books = ref<Book[]>([]);
 const selectedBook = ref<Book | null>(null);
+const isFormVisible = ref(false);
 
 const fetchBooks = async () => {
   try {
@@ -21,17 +22,31 @@ const fetchBooks = async () => {
   }
 };
 
+const showCreateForm = () => {
+  selectedBook.value = null;
+  isFormVisible.value = true;
+};
+
 const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
+  isFormVisible.value = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const handleBookCreated = () => {
   selectedBook.value = null;
+  isFormVisible.value = false;
   fetchBooks();
+};
+
+const closeForm = () => {
+  selectedBook.value = null;
+  isFormVisible.value = false;
 };
 
 const handleBookDeletedFromForm = (deletedId: number) => {
   selectedBook.value = null;
+  isFormVisible.value = false;
   books.value = books.value.filter(book => book.id !== deletedId);
 };
 
@@ -46,6 +61,7 @@ const handleDeleteFromList = async (id: number) => {
 
       if (selectedBook.value?.id === id) {
         selectedBook.value = null;
+        isFormVisible.value = false;
       }
     } else {
       console.error("Fehler beim Löschen des Buches (API-Status nicht OK).");
@@ -64,12 +80,20 @@ onMounted(fetchBooks);
   <main class="container">
     <h1>Bücherverwaltung</h1>
 
-    <BookForm
-      :book-to-edit="selectedBook"
-      @book-created="handleBookCreated"
-      @book-deleted="handleBookDeletedFromForm"
-      @cancel-edit="selectedBook = null"
-    />
+    <div v-if="!isFormVisible" class="action-bar">
+      <button @click="showCreateForm" class="btn-create">
+        + Neues Buch anlegen
+      </button>
+    </div>
+
+    <div v-if="isFormVisible" class="form-wrapper">
+      <BookForm
+        :book-to-edit="selectedBook"
+        @book-created="handleBookCreated"
+        @book-deleted="handleBookDeletedFromForm"
+        @cancel-edit="closeForm"
+      />
+    </div>
 
     <BookList
       :books="books"
@@ -89,7 +113,43 @@ onMounted(fetchBooks);
 
 h1 {
   text-align: center;
-  color: #2c3e50;
+  color: #ffffff;
   margin-bottom: 30px;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.btn-create {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-create:hover {
+  background-color: #43a047;
+}
+
+.btn-create:active {
+  transform: scale(0.98);
+}
+
+.form-wrapper {
+  margin-bottom: 40px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

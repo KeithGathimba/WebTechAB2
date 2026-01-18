@@ -15,7 +15,6 @@ const status = ref<string>(BOOK_STATUS.PLANNED);
 const rating = ref(0);
 const notification = ref<{ message: string, type: 'success' | 'error' } | null>(null);
 
-// Hilfsfunktion für Benachrichtigungen
 const showNotification = (msg: string, type: 'success' | 'error' = 'success') => {
   notification.value = { message: msg, type };
   setTimeout(() => notification.value = null, 3000);
@@ -26,7 +25,9 @@ watch(() => props.bookToEdit, (newVal) => {
     title.value = newVal.title;
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
-    const currentStatus = newVal.status === 'Offen' ? BOOK_STATUS.READING : newVal.status;
+
+    const currentStatus = (newVal.status as string) === 'Offen' ? BOOK_STATUS.READING : newVal.status;
+
     status.value = currentStatus || BOOK_STATUS.PLANNED;
     rating.value = newVal.rating || 0;
   } else {

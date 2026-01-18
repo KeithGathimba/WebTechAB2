@@ -64,8 +64,9 @@ const requestDelete = (book: Book) => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Gelesen': return '#4CAF50';
-    case 'Steht an': return '#FF9800';
+    case 'Lesend': return '#2196F3';
     case 'Offen': return '#2196F3';
+    case 'Steht an': return '#FF9800';
     default: return '#9E9E9E';
   }
 };
@@ -159,7 +160,7 @@ const getStatusColor = (status: string) => {
             <div class="card-header-left">
               <span class="book-title">{{ book.title }}</span>
               <span class="status-tag" :style="{ backgroundColor: getStatusColor(book.status) }">
-                {{ book.status || 'Offen' }}
+                {{ book.status || 'Steht an' }}
               </span>
             </div>
             <button

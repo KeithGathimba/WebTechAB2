@@ -10,7 +10,7 @@ const props = defineProps<{
 const title = ref('');
 const author = ref('');
 const releaseYear = ref(2024);
-const status = ref('Offen');
+const status = ref('Steht an');
 const rating = ref(0);
 
 const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
@@ -20,7 +20,8 @@ watch(() => props.bookToEdit, (newVal) => {
     title.value = newVal.title;
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
-    status.value = newVal.status || 'Offen';
+    const currentStatus = newVal.status === 'Offen' ? 'Lesend' : newVal.status;
+    status.value = currentStatus || 'Steht an';
     rating.value = newVal.rating || 0;
   } else {
     resetForm();
@@ -31,7 +32,7 @@ const resetForm = () => {
   title.value = '';
   author.value = '';
   releaseYear.value = 2024;
-  status.value = 'Offen';
+  status.value = 'Steht an';
   rating.value = 0;
 };
 
@@ -118,13 +119,13 @@ const deleteBook = async () => {
       <div class="form-group">
         <label for="status">Status:</label>
         <select id="status" v-model="status">
-          <option value="Offen">Offen</option>
           <option value="Steht an">Steht an</option>
+          <option value="Lesend">Lesend</option>
           <option value="Gelesen">Gelesen</option>
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" v-if="status !== 'Steht an'">
         <label>Bewertung:</label>
         <div class="star-rating">
           <span

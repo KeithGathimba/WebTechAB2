@@ -6,7 +6,7 @@ import type { Book } from '../types/Book';
 
 const books = ref<Book[]>([]);
 const selectedBook = ref<Book | null>(null);
-const isFormVisible = ref(false); // Startzustand: Formular ist unsichtbar
+const isFormVisible = ref(false);
 
 const fetchBooks = async () => {
   try {
@@ -22,39 +22,28 @@ const fetchBooks = async () => {
   }
 };
 
-// Button "Neues Buch": Formular öffnen, Auswahl leeren
 const showCreateForm = () => {
   selectedBook.value = null;
   isFormVisible.value = true;
 };
 
-// Bearbeiten aus der Liste: Formular öffnen, Buch setzen, hochscrollen
 const handleEditRequest = (book: Book) => {
   selectedBook.value = book;
   isFormVisible.value = true;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// Nach Speichern: Formular schließen, Liste neu laden
 const handleBookCreated = () => {
   selectedBook.value = null;
   isFormVisible.value = false;
   fetchBooks();
 };
 
-// Abbrechen: Formular schließen
 const closeForm = () => {
   selectedBook.value = null;
   isFormVisible.value = false;
 };
 
-// Nach Löschen im Formular: Formular schließen, Buch aus Liste entfernen
-const handleBookDeletedFromForm = (deletedId: number) => {
-  closeForm();
-  books.value = books.value.filter(book => book.id !== deletedId);
-};
-
-// Löschen in der Liste
 const handleDeleteFromList = async (id: number) => {
   try {
     const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${id}`, {
@@ -67,7 +56,7 @@ const handleDeleteFromList = async (id: number) => {
         closeForm();
       }
     } else {
-      console.error("Fehler beim Löschen.");
+      alert("Fehler beim Löschen.");
     }
   } catch (error) {
     console.error(error);
@@ -82,33 +71,39 @@ onMounted(fetchBooks);
 
     <div class="header-row">
       <h1>Bücherverwaltung</h1>
-
       <button v-if="!isFormVisible" @click="showCreateForm" class="btn-create">
         + Neues Buch
       </button>
     </div>
 
-    <div v-if="isFormVisible" class="form-wrapper">
-      <BookForm
-        :book-to-edit="selectedBook"
-        @book-created="handleBookCreated"
-        @book-deleted="handleBookDeletedFromForm"
-        @cancel-edit="closeForm"
-      />
-    </div>
+    <div class="content-wrapper">
 
-    <BookList
-      :books="books"
-      :selected-book-id="selectedBook?.id"
-      @edit-book="handleEditRequest"
-      @delete-book="handleDeleteFromList"
-    />
+      <div class="list-section">
+        <BookList
+          :books="books"
+          :selected-book-id="selectedBook?.id"
+          @edit-book="handleEditRequest"
+          @delete-book="handleDeleteFromList"
+        />
+      </div>
+
+      <transition name="slide-right">
+        <div v-if="isFormVisible" class="form-section">
+          <BookForm
+            :book-to-edit="selectedBook"
+            @book-created="handleBookCreated"
+            @cancel-edit="closeForm"
+          />
+        </div>
+      </transition>
+
+    </div>
   </main>
 </template>
 
 <style scoped>
 .container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -122,11 +117,7 @@ onMounted(fetchBooks);
   min-height: 50px;
 }
 
-h1 {
-  margin: 0;
-  color: #e0e0e0;
-  text-align: center;
-}
+h1 { margin: 0; color: #e0e0e0; text-align: center; }
 
 .btn-create {
   position: absolute;
@@ -140,22 +131,37 @@ h1 {
   cursor: pointer;
   transition: background-color 0.2s;
 }
+.btn-create:hover { background-color: #43a047; }
 
-.btn-create:hover {
-  background-color: #43a047;
+
+.content-wrapper {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
 }
 
-.form-wrapper {
-  margin-bottom: 40px;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: #1e1e1e;
-  animation: fadeIn 0.3s ease-in-out;
+
+.list-section {
+  flex: 1;
+  min-width: 0;
+  transition: all 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+
+.form-section {
+  width: 350px;
+  flex-shrink: 0;
+}
+
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
 }
 </style>

@@ -6,7 +6,7 @@ const props = defineProps<{
   bookToEdit: Book | null;
 }>();
 
-const emit = defineEmits(['book-created', 'cancel-edit', 'book-deleted']);
+const emit = defineEmits(['book-created', 'cancel-edit']);
 
 const title = ref('');
 const author = ref('');
@@ -25,9 +25,7 @@ watch(() => props.bookToEdit, (newVal) => {
     title.value = newVal.title;
     author.value = newVal.author;
     releaseYear.value = newVal.releaseYear;
-
     const currentStatus = (newVal.status as string) === 'Offen' ? BOOK_STATUS.READING : newVal.status;
-
     status.value = currentStatus || BOOK_STATUS.PLANNED;
     rating.value = newVal.rating || 0;
   } else {
@@ -77,36 +75,19 @@ const submitForm = async () => {
 
     if (!isEdit) resetForm();
     emit('book-created');
-    showNotification(isEdit ? 'Buch erfolgreich aktualisiert!' : 'Buch erfolgreich gespeichert!');
+    showNotification(isEdit ? 'Buch aktualisiert!' : 'Buch gespeichert!');
 
   } catch (error) {
     console.error(error);
-    showNotification('Fehler beim Speichern des Buches.', 'error');
-  }
-};
-
-const deleteBook = async () => {
-  if (!props.bookToEdit) return;
-  if (!confirm('Wirklich unwiderruflich löschen?')) return;
-
-  try {
-    const response = await fetch(`https://webtech-backend-g4ak.onrender.com/api/v1/books/${props.bookToEdit.id}`, {
-      method: 'DELETE'
-    });
-    if (response.ok) {
-      emit('book-deleted', props.bookToEdit.id);
-      resetForm();
-    } else {
-      showNotification('Fehler beim Löschen.', 'error');
-    }
-  } catch (error) {
-    showNotification('Netzwerkfehler.', 'error');
+    showNotification('Fehler beim Speichern.', 'error');
   }
 };
 </script>
 
 <template>
   <div class="form-container">
+    <button class="close-btn" @click="emit('cancel-edit')" title="Schließen">✕</button>
+
     <h3>{{ props.bookToEdit ? 'Buch bearbeiten' : 'Neues Buch anlegen' }}</h3>
 
     <div v-if="notification" :class="['notification', notification.type]">
@@ -114,7 +95,6 @@ const deleteBook = async () => {
     </div>
 
     <form @submit.prevent="submitForm">
-
       <div class="form-group">
         <label for="title">Titel:</label>
         <input id="title" v-model="title" type="text" required placeholder="Titel" />
@@ -155,15 +135,42 @@ const deleteBook = async () => {
 
       <div class="button-group">
         <button type="submit" class="btn-save">{{ props.bookToEdit ? 'Speichern' : 'Hinzufügen' }}</button>
-        <button v-if="props.bookToEdit" type="button" @click="deleteBook" class="btn-delete">Löschen</button>
-        <button v-if="props.bookToEdit" type="button" @click="emit('cancel-edit')" class="btn-cancel">Abbrechen</button>
+        <button type="button" @click="emit('cancel-edit')" class="btn-cancel">Abbrechen</button>
       </div>
     </form>
   </div>
 </template>
 
 <style scoped>
-.form-container { background-color: #1e1e1e; padding: 20px; border-radius: 8px; color: #fff; }
+
+.form-container {
+  position: relative;
+  background-color: #1e1e1e;
+  padding: 25px 20px 20px;
+  border-radius: 8px;
+  color: #fff;
+  border: 1px solid #333;
+  height: fit-content;
+}
+
+/* X-Button Style */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: #fff;
+}
+
 .form-group { margin-bottom: 15px; }
 label { display: block; margin-bottom: 5px; font-weight: bold; color: #ccc; }
 input, select { width: 100%; padding: 10px; border-radius: 4px; background-color: #2c2c2c; border: 1px solid #444; color: #fff; }
@@ -174,9 +181,8 @@ input, select { width: 100%; padding: 10px; border-radius: 4px; background-color
 .star-rating span:hover { color: #ffe066; }
 
 .button-group { display: flex; gap: 10px; margin-top: 20px; }
-button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+button:not(.close-btn) { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; }
 .btn-save { background-color: #4CAF50; flex: 1; }
-.btn-delete { background-color: #c62828; }
 .btn-cancel { background-color: #757575; }
 
 .notification { padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center; font-weight: bold; }

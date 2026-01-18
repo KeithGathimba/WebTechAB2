@@ -176,3 +176,5 @@ h1 { margin: 0; color: #e0e0e0; text-align: center; }
   right: 0;
   background-color: #4CAF50;
   color: white;
+}
+</style>

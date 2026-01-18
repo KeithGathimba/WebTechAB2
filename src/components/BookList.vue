@@ -14,6 +14,8 @@ const filterStatus = ref<string>('Alle');
 const sortBy = ref<keyof Book>('title');
 const sortOrder = ref<'asc' | 'desc'>('asc');
 const showStats = ref(false);
+// NEU: Ansichts-Modus ('list' oder 'board')
+const viewMode = ref<'list' | 'board'>('list');
 
 const stats = computed(() => {
   const total = props.books.length;
@@ -31,17 +33,15 @@ const stats = computed(() => {
 const filteredAndSortedBooks = computed(() => {
   let result = props.books.filter(book => {
     const term = searchQuery.value.toLowerCase();
-    const matchesSearch = book.title.toLowerCase().includes(term) ||
-      book.author.toLowerCase().includes(term);
-
+    const matchesSearch = book.title.toLowerCase().includes(term) || book.author.toLowerCase().includes(term);
     const matchesFilter = filterStatus.value === 'Alle' || book.status === filterStatus.value;
-
     return matchesSearch && matchesFilter;
   });
 
   return result.sort((a, b) => {
     let modifier = sortOrder.value === 'asc' ? 1 : -1;
 
+    // FIX für TypeScript Fehler (undefined values)
     const valA = a[sortBy.value];
     const valB = b[sortBy.value];
 
@@ -49,12 +49,16 @@ const filteredAndSortedBooks = computed(() => {
     if (valA === undefined) return 1;
     if (valB === undefined) return -1;
 
-
     if (valA < valB) return -1 * modifier;
     if (valA > valB) return 1 * modifier;
     return 0;
   });
 });
+
+// Hilfsfunktion für Kanban: Bücher nach Status gruppieren
+const getBooksByStatus = (status: string) => {
+  return filteredAndSortedBooks.value.filter(b => b.status === status);
+};
 
 const setSort = (field: keyof Book) => {
   if (sortBy.value === field) {
@@ -86,9 +90,15 @@ const getStatusColor = (status: string) => {
   <div class="book-list-container">
     <div class="list-header">
       <h2>Meine Sammlung</h2>
-      <button @click="showStats = !showStats" class="toggle-stats-btn">
-        {{ showStats ? 'Statistik verbergen' : 'Statistik anzeigen' }}
-      </button>
+      <div class="header-actions">
+        <div class="view-toggle">
+          <button @click="viewMode = 'list'" :class="{ active: viewMode === 'list' }" title="Listenansicht">☰</button>
+          <button @click="viewMode = 'board'" :class="{ active: viewMode === 'board' }" title="Kanban Board">☷</button>
+        </div>
+        <button @click="showStats = !showStats" class="toggle-stats-btn">
+          {{ showStats ? 'Statistik verbergen' : 'Statistik anzeigen' }}
+        </button>
+      </div>
     </div>
 
     <transition name="slide-fade">
@@ -111,7 +121,8 @@ const getStatusColor = (status: string) => {
         <input v-model="searchQuery" type="text" placeholder="Titel oder Autor suchen..." class="search-input" />
         <span v-if="searchQuery" @click="searchQuery = ''" class="clear-icon">✕</span>
       </div>
-      <div class="filter-wrapper">
+
+      <div class="filter-wrapper" v-if="viewMode === 'list'">
         <span class="filter-label">Zeige:</span>
         <div class="filter-buttons">
           <button @click="filterStatus = 'Alle'" :class="{ active: filterStatus === 'Alle' }">Alle</button>
@@ -120,6 +131,7 @@ const getStatusColor = (status: string) => {
           <button @click="filterStatus = BOOK_STATUS.READ" :class="{ active: filterStatus === BOOK_STATUS.READ }">Gelesen</button>
         </div>
       </div>
+
       <div class="sort-wrapper">
         <span class="sort-label">Sortieren:</span>
         <div class="sort-buttons">
@@ -135,16 +147,13 @@ const getStatusColor = (status: string) => {
       <p>Keine Bücher gefunden.</p>
     </div>
 
-    <ul class="book-list">
+    <ul v-if="viewMode === 'list'" class="book-list">
       <li v-for="book in filteredAndSortedBooks" :key="book.id" @click="emit('edit-book', book)" class="book-card" :class="{ 'selected-card': book.id === props.selectedBookId }">
         <div class="card-content-wrapper">
-
           <div class="book-cover" v-if="book.coverUrl">
             <img :src="book.coverUrl" alt="Cover" />
           </div>
-          <div class="book-cover placeholder" v-else>
-            <span>📖</span>
-          </div>
+          <div class="book-cover placeholder" v-else><span>📖</span></div>
 
           <div class="card-content">
             <div class="card-top">
@@ -169,23 +178,71 @@ const getStatusColor = (status: string) => {
         </div>
       </li>
     </ul>
+
+    <div v-else class="kanban-board">
+      <div class="kanban-column">
+        <h3 class="column-title" style="border-top-color: #FF9800;">{{ BOOK_STATUS.PLANNED }}</h3>
+        <div class="kanban-cards">
+          <div v-for="book in getBooksByStatus(BOOK_STATUS.PLANNED)" :key="book.id"
+               class="kanban-card" @click="emit('edit-book', book)">
+            <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
+            <div class="kanban-content">
+              <div class="k-title">{{ book.title }}</div>
+              <div class="k-author">{{ book.author }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban-column">
+        <h3 class="column-title" style="border-top-color: #2196F3;">{{ BOOK_STATUS.READING }}</h3>
+        <div class="kanban-cards">
+          <div v-for="book in getBooksByStatus(BOOK_STATUS.READING)" :key="book.id"
+               class="kanban-card" @click="emit('edit-book', book)">
+            <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
+            <div class="kanban-content">
+              <div class="k-title">{{ book.title }}</div>
+              <div class="k-author">{{ book.author }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban-column">
+        <h3 class="column-title" style="border-top-color: #4CAF50;">{{ BOOK_STATUS.READ }}</h3>
+        <div class="kanban-cards">
+          <div v-for="book in getBooksByStatus(BOOK_STATUS.READ)" :key="book.id"
+               class="kanban-card" @click="emit('edit-book', book)">
+            <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
+            <div class="kanban-content">
+              <div class="k-title">{{ book.title }}</div>
+              <div class="k-rating" v-if="book.rating > 0">
+                <span v-for="n in book.rating" :key="n">★</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <style scoped>
 .book-list-container { margin-top: 40px; color: #e0e0e0; }
-
-.card-content-wrapper { display: flex; gap: 15px; align-items: flex-start; }
-.book-cover { flex-shrink: 0; width: 60px; height: 90px; border-radius: 4px; overflow: hidden; background-color: #2c2c2c; display: flex; align-items: center; justify-content: center; }
-.book-cover img { width: 100%; height: 100%; object-fit: cover; }
-.book-cover.placeholder { font-size: 1.5rem; color: #555; border: 1px solid #444; }
-.card-content { flex-grow: 1; }
-
-
 .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-.list-header h2 { margin: 0; font-size: 1.8rem; font-weight: 600; color: #ffffff; }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+
+/* View Toggle Buttons */
+.view-toggle { background: #252525; padding: 4px; border-radius: 20px; border: 1px solid #333; display: flex; gap: 2px;}
+.view-toggle button { background: transparent; border: none; color: #888; padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 1.1rem; line-height: 1; }
+.view-toggle button:hover { color: #fff; }
+.view-toggle button.active { background-color: #2c3e50; color: #4CAF50; }
+
 .toggle-stats-btn { background: transparent; border: 1px solid #4CAF50; color: #4CAF50; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
 .toggle-stats-btn:hover { background: #4CAF50; color: #ffffff; }
+
+/* ... (Alte Statistik, Filter, Sort, Book-Card Styles bleiben gleich) ... */
 .dashboard-panel { background-color: #1e2a38; border-radius: 12px; padding: 25px; margin-bottom: 35px; border: 1px solid #2c3e50; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 20px; margin-bottom: 20px; text-align: center; }
 .stat-box { display: flex; flex-direction: column; }
@@ -207,10 +264,17 @@ const getStatusColor = (status: string) => {
 .filter-buttons button, .sort-buttons button { background: #252525; border: 1px solid #333; color: #ccc; padding: 6px 14px; border-radius: 15px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
 .filter-buttons button:hover, .sort-buttons button:hover { background: #333; }
 .filter-buttons button.active, .sort-buttons button.active { background: #2c3e50; color: #42b983; border-color: #42b983; }
+
+/* ... List View Styles ... */
 .book-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 15px; }
 .book-card { background-color: #1e2a38; padding: 20px; border-radius: 10px; border: 1px solid #2c3e50; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
 .book-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); background-color: #233040; }
 .selected-card { border-left: 5px solid #42b983; background-color: #1a232e !important; box-shadow: inset 0 0 0 1px #42b983; }
+.card-content-wrapper { display: flex; gap: 15px; align-items: flex-start; }
+.book-cover { flex-shrink: 0; width: 60px; height: 90px; border-radius: 4px; overflow: hidden; background-color: #2c2c2c; display: flex; align-items: center; justify-content: center; }
+.book-cover img { width: 100%; height: 100%; object-fit: cover; }
+.book-cover.placeholder { font-size: 1.5rem; color: #555; border: 1px solid #444; }
+.card-content { flex-grow: 1; }
 .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .card-header-left { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
 .delete-btn { background: transparent; border: none; color: #ef5350; cursor: pointer; padding: 5px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; margin-left: 10px; }
@@ -223,4 +287,66 @@ const getStatusColor = (status: string) => {
 .empty-state { text-align: center; color: #666; padding: 40px; font-style: italic; }
 .slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease-out; overflow: hidden; max-height: 500px; opacity: 1; }
 .slide-fade-enter-from, .slide-fade-leave-to { max-height: 0; opacity: 0; }
+
+/* === NEU: KANBAN BOARD STYLES === */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.kanban-column {
+  background-color: #1e1e1e; /* Leicht anders als der Hintergrund */
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid #333;
+}
+
+.column-title {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: #e0e0e0;
+  text-align: center;
+  border-top: 3px solid #666; /* Farbiger Strich oben */
+  padding-top: 10px;
+}
+
+.kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kanban-card {
+  background-color: #2c3e50;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  border: 1px solid #444;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.kanban-card:hover {
+  transform: translateY(-3px);
+  background-color: #34495e;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.kanban-cover {
+  width: 40px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.kanban-cover img { width: 100%; height: 100%; object-fit: cover; }
+
+.kanban-content { flex: 1; min-width: 0; }
+.k-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;}
+.k-author { font-size: 0.8rem; color: #aaa; }
+.k-rating { color: #fdd835; font-size: 0.8rem; margin-top: 3px; }
 </style>

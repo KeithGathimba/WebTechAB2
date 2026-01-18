@@ -81,6 +81,13 @@ const getStatusColor = (status: string) => {
     default: return '#9E9E9E';
   }
 };
+
+// NEU: Link generieren
+const getOpenLibraryUrl = (isbn: string) => {
+  // Entfernt evtl. Bindestriche für die URL, sicherheitshalber
+  const cleanIsbn = isbn.replace(/-/g, '');
+  return `https://openlibrary.org/isbn/${cleanIsbn}`;
+};
 </script>
 
 <template>
@@ -166,9 +173,26 @@ const getStatusColor = (status: string) => {
                   {{ book.status || BOOK_STATUS.PLANNED }}
                 </span>
               </div>
-              <button class="delete-btn" @click.stop="requestDelete(book)" title="Buch löschen">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
-              </button>
+
+              <div class="action-buttons">
+                <a
+                  v-if="book.isbn"
+                  :href="getOpenLibraryUrl(book.isbn)"
+                  target="_blank"
+                  class="icon-btn link-btn"
+                  title="Auf OpenLibrary ansehen"
+                  @click.stop
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+
+                <button class="icon-btn delete-btn" @click.stop="requestDelete(book)" title="Buch löschen">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                </button>
+              </div>
+
             </div>
             <div class="card-details">
               <span class="book-author">von {{ book.author }}</span>
@@ -197,7 +221,10 @@ const getStatusColor = (status: string) => {
           >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
-              <div class="k-title">{{ book.title }}</div>
+              <div class="k-header">
+                <div class="k-title">{{ book.title }}</div>
+                <a v-if="book.isbn" :href="getOpenLibraryUrl(book.isbn)" target="_blank" class="k-link" @click.stop>↗</a>
+              </div>
               <div class="k-author">{{ book.author }}</div>
             </div>
           </div>
@@ -216,7 +243,10 @@ const getStatusColor = (status: string) => {
           >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
-              <div class="k-title">{{ book.title }}</div>
+              <div class="k-header">
+                <div class="k-title">{{ book.title }}</div>
+                <a v-if="book.isbn" :href="getOpenLibraryUrl(book.isbn)" target="_blank" class="k-link" @click.stop>↗</a>
+              </div>
               <div class="k-author">{{ book.author }}</div>
               <div class="k-rating">
                 <span v-for="n in 5" :key="n" :class="n <= book.rating ? 'star-filled' : 'star-empty'">★</span>
@@ -238,7 +268,10 @@ const getStatusColor = (status: string) => {
           >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
-              <div class="k-title">{{ book.title }}</div>
+              <div class="k-header">
+                <div class="k-title">{{ book.title }}</div>
+                <a v-if="book.isbn" :href="getOpenLibraryUrl(book.isbn)" target="_blank" class="k-link" @click.stop>↗</a>
+              </div>
               <div class="k-rating">
                 <span v-for="n in 5" :key="n" :class="n <= book.rating ? 'star-filled' : 'star-empty'">★</span>
               </div>
@@ -295,10 +328,10 @@ const getStatusColor = (status: string) => {
 
 
 .selected-card {
-  border: 2px solid #4CAF50 !important; /* Grüner Rahmen rundum */
-  background-color: #2e4a3e !important; /* Etwas grünerer Hintergrund */
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.4) !important; /* Glow Effekt */
-  transform: scale(1.01); /* Minimal größer */
+  border: 2px solid #4CAF50 !important;
+  background-color: #2e4a3e !important;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.4) !important;
+  transform: scale(1.01);
 }
 
 .card-content-wrapper { display: flex; gap: 15px; align-items: flex-start; }
@@ -308,8 +341,17 @@ const getStatusColor = (status: string) => {
 .card-content { flex-grow: 1; }
 .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .card-header-left { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
-.delete-btn { background: transparent; border: none; color: #ef5350; cursor: pointer; padding: 5px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; margin-left: 10px; }
+
+
+.action-buttons { display: flex; gap: 8px; align-items: center; }
+
+
+.icon-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+.delete-btn { color: #ef5350; }
 .delete-btn:hover { background-color: rgba(239, 83, 80, 0.15); }
+.link-btn { color: #2196F3; }
+.link-btn:hover { background-color: rgba(33, 150, 243, 0.15); }
+
 .book-title { font-size: 1.2rem; font-weight: bold; color: #fff; }
 .status-tag { display: inline-block; width: fit-content; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; color: white; font-weight: 600; }
 .card-details { font-size: 0.95rem; color: #b0bec5; margin-bottom: 10px; }
@@ -334,7 +376,10 @@ const getStatusColor = (status: string) => {
 .kanban-cover { width: 40px; height: 60px; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
 .kanban-cover img { width: 100%; height: 100%; object-fit: cover; }
 .kanban-content { flex: 1; min-width: 0; }
-.k-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+.k-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.k-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; max-width: 85%; }
 .k-author { font-size: 0.8rem; color: #aaa; }
 .k-rating { font-size: 0.8rem; margin-top: 3px; }
+.k-link { color: #888; text-decoration: none; font-size: 1.1rem; line-height: 1; }
+.k-link:hover { color: #fff; }
 </style>

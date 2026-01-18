@@ -14,7 +14,6 @@ const filterStatus = ref<string>('Alle');
 const sortBy = ref<keyof Book>('title');
 const sortOrder = ref<'asc' | 'desc'>('asc');
 const showStats = ref(false);
-// NEU: Ansichts-Modus ('list' oder 'board')
 const viewMode = ref<'list' | 'board'>('list');
 
 const stats = computed(() => {
@@ -41,7 +40,6 @@ const filteredAndSortedBooks = computed(() => {
   return result.sort((a, b) => {
     let modifier = sortOrder.value === 'asc' ? 1 : -1;
 
-    // FIX für TypeScript Fehler (undefined values)
     const valA = a[sortBy.value];
     const valB = b[sortBy.value];
 
@@ -55,7 +53,6 @@ const filteredAndSortedBooks = computed(() => {
   });
 });
 
-// Hilfsfunktion für Kanban: Bücher nach Status gruppieren
 const getBooksByStatus = (status: string) => {
   return filteredAndSortedBooks.value.filter(b => b.status === status);
 };
@@ -171,9 +168,11 @@ const getStatusColor = (status: string) => {
               <span class="book-author">von {{ book.author }}</span>
               <span class="book-year">({{ book.releaseYear }})</span>
             </div>
-            <div class="card-rating" v-if="book.rating > 0">
-              <span v-for="n in book.rating" :key="n">★</span>
+
+            <div class="card-rating" v-if="book.status !== BOOK_STATUS.PLANNED">
+              <span v-for="n in 5" :key="n" :class="n <= book.rating ? 'star-filled' : 'star-empty'">★</span>
             </div>
+
           </div>
         </div>
       </li>
@@ -203,6 +202,9 @@ const getStatusColor = (status: string) => {
             <div class="kanban-content">
               <div class="k-title">{{ book.title }}</div>
               <div class="k-author">{{ book.author }}</div>
+              <div class="k-rating">
+                <span v-for="n in 5" :key="n" :class="n <= book.rating ? 'star-filled' : 'star-empty'">★</span>
+              </div>
             </div>
           </div>
         </div>
@@ -216,8 +218,8 @@ const getStatusColor = (status: string) => {
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
               <div class="k-title">{{ book.title }}</div>
-              <div class="k-rating" v-if="book.rating > 0">
-                <span v-for="n in book.rating" :key="n">★</span>
+              <div class="k-rating">
+                <span v-for="n in 5" :key="n" :class="n <= book.rating ? 'star-filled' : 'star-empty'">★</span>
               </div>
             </div>
           </div>
@@ -242,7 +244,7 @@ const getStatusColor = (status: string) => {
 .toggle-stats-btn { background: transparent; border: 1px solid #4CAF50; color: #4CAF50; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
 .toggle-stats-btn:hover { background: #4CAF50; color: #ffffff; }
 
-/* ... (Alte Statistik, Filter, Sort, Book-Card Styles bleiben gleich) ... */
+/* Dashboard & Controls */
 .dashboard-panel { background-color: #1e2a38; border-radius: 12px; padding: 25px; margin-bottom: 35px; border: 1px solid #2c3e50; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 20px; margin-bottom: 20px; text-align: center; }
 .stat-box { display: flex; flex-direction: column; }
@@ -265,7 +267,7 @@ const getStatusColor = (status: string) => {
 .filter-buttons button:hover, .sort-buttons button:hover { background: #333; }
 .filter-buttons button.active, .sort-buttons button.active { background: #2c3e50; color: #42b983; border-color: #42b983; }
 
-/* ... List View Styles ... */
+/* List View */
 .book-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 15px; }
 .book-card { background-color: #1e2a38; padding: 20px; border-radius: 10px; border: 1px solid #2c3e50; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
 .book-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); background-color: #233040; }
@@ -283,70 +285,27 @@ const getStatusColor = (status: string) => {
 .status-tag { display: inline-block; width: fit-content; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; color: white; font-weight: 600; }
 .card-details { font-size: 0.95rem; color: #b0bec5; margin-bottom: 10px; }
 .book-year { margin-left: 5px; color: #78909c; }
-.card-rating { color: #fdd835; letter-spacing: 2px; }
+
+/* NEU: Sterne Styling */
+.card-rating { letter-spacing: 2px; }
+.star-filled { color: #fdd835; }
+.star-empty { color: #444; } /* Dunkles Grau für leere Sterne */
+
 .empty-state { text-align: center; color: #666; padding: 40px; font-style: italic; }
 .slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease-out; overflow: hidden; max-height: 500px; opacity: 1; }
 .slide-fade-enter-from, .slide-fade-leave-to { max-height: 0; opacity: 0; }
 
-/* === NEU: KANBAN BOARD STYLES === */
-.kanban-board {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.kanban-column {
-  background-color: #1e1e1e; /* Leicht anders als der Hintergrund */
-  border-radius: 12px;
-  padding: 15px;
-  border: 1px solid #333;
-}
-
-.column-title {
-  margin: 0 0 15px 0;
-  font-size: 1.1rem;
-  color: #e0e0e0;
-  text-align: center;
-  border-top: 3px solid #666; /* Farbiger Strich oben */
-  padding-top: 10px;
-}
-
-.kanban-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.kanban-card {
-  background-color: #2c3e50;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
-  border: 1px solid #444;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.kanban-card:hover {
-  transform: translateY(-3px);
-  background-color: #34495e;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-}
-
-.kanban-cover {
-  width: 40px;
-  height: 60px;
-  border-radius: 4px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
+/* Kanban View */
+.kanban-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+.kanban-column { background-color: #1e1e1e; border-radius: 12px; padding: 15px; border: 1px solid #333; }
+.column-title { margin: 0 0 15px 0; font-size: 1.1rem; color: #e0e0e0; text-align: center; border-top: 3px solid #666; padding-top: 10px; }
+.kanban-cards { display: flex; flex-direction: column; gap: 10px; }
+.kanban-card { background-color: #2c3e50; padding: 10px; border-radius: 8px; cursor: pointer; transition: transform 0.2s, background 0.2s; border: 1px solid #444; display: flex; gap: 10px; align-items: center; }
+.kanban-card:hover { transform: translateY(-3px); background-color: #34495e; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+.kanban-cover { width: 40px; height: 60px; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
 .kanban-cover img { width: 100%; height: 100%; object-fit: cover; }
-
 .kanban-content { flex: 1; min-width: 0; }
-.k-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;}
+.k-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
 .k-author { font-size: 0.8rem; color: #aaa; }
-.k-rating { color: #fdd835; font-size: 0.8rem; margin-top: 3px; }
+.k-rating { font-size: 0.8rem; margin-top: 3px; }
 </style>

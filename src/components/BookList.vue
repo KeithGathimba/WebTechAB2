@@ -145,7 +145,13 @@ const getStatusColor = (status: string) => {
     </div>
 
     <ul v-if="viewMode === 'list'" class="book-list">
-      <li v-for="book in filteredAndSortedBooks" :key="book.id" @click="emit('edit-book', book)" class="book-card" :class="{ 'selected-card': book.id === props.selectedBookId }">
+      <li
+        v-for="book in filteredAndSortedBooks"
+        :key="book.id"
+        @click="emit('edit-book', book)"
+        class="book-card"
+        :class="{ 'selected-card': book.id === props.selectedBookId }"
+      >
         <div class="card-content-wrapper">
           <div class="book-cover" v-if="book.coverUrl">
             <img :src="book.coverUrl" alt="Cover" />
@@ -182,8 +188,13 @@ const getStatusColor = (status: string) => {
       <div class="kanban-column">
         <h3 class="column-title" style="border-top-color: #FF9800;">{{ BOOK_STATUS.PLANNED }}</h3>
         <div class="kanban-cards">
-          <div v-for="book in getBooksByStatus(BOOK_STATUS.PLANNED)" :key="book.id"
-               class="kanban-card" @click="emit('edit-book', book)">
+          <div
+            v-for="book in getBooksByStatus(BOOK_STATUS.PLANNED)"
+            :key="book.id"
+            class="kanban-card"
+            :class="{ 'selected-card': book.id === props.selectedBookId }"
+            @click="emit('edit-book', book)"
+          >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
               <div class="k-title">{{ book.title }}</div>
@@ -196,8 +207,13 @@ const getStatusColor = (status: string) => {
       <div class="kanban-column">
         <h3 class="column-title" style="border-top-color: #2196F3;">{{ BOOK_STATUS.READING }}</h3>
         <div class="kanban-cards">
-          <div v-for="book in getBooksByStatus(BOOK_STATUS.READING)" :key="book.id"
-               class="kanban-card" @click="emit('edit-book', book)">
+          <div
+            v-for="book in getBooksByStatus(BOOK_STATUS.READING)"
+            :key="book.id"
+            class="kanban-card"
+            :class="{ 'selected-card': book.id === props.selectedBookId }"
+            @click="emit('edit-book', book)"
+          >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
               <div class="k-title">{{ book.title }}</div>
@@ -213,8 +229,13 @@ const getStatusColor = (status: string) => {
       <div class="kanban-column">
         <h3 class="column-title" style="border-top-color: #4CAF50;">{{ BOOK_STATUS.READ }}</h3>
         <div class="kanban-cards">
-          <div v-for="book in getBooksByStatus(BOOK_STATUS.READ)" :key="book.id"
-               class="kanban-card" @click="emit('edit-book', book)">
+          <div
+            v-for="book in getBooksByStatus(BOOK_STATUS.READ)"
+            :key="book.id"
+            class="kanban-card"
+            :class="{ 'selected-card': book.id === props.selectedBookId }"
+            @click="emit('edit-book', book)"
+          >
             <div class="kanban-cover" v-if="book.coverUrl"><img :src="book.coverUrl" /></div>
             <div class="kanban-content">
               <div class="k-title">{{ book.title }}</div>
@@ -235,7 +256,7 @@ const getStatusColor = (status: string) => {
 .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .header-actions { display: flex; gap: 10px; align-items: center; }
 
-/* View Toggle Buttons */
+
 .view-toggle { background: #252525; padding: 4px; border-radius: 20px; border: 1px solid #333; display: flex; gap: 2px;}
 .view-toggle button { background: transparent; border: none; color: #888; padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 1.1rem; line-height: 1; }
 .view-toggle button:hover { color: #fff; }
@@ -244,7 +265,7 @@ const getStatusColor = (status: string) => {
 .toggle-stats-btn { background: transparent; border: 1px solid #4CAF50; color: #4CAF50; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
 .toggle-stats-btn:hover { background: #4CAF50; color: #ffffff; }
 
-/* Dashboard & Controls */
+
 .dashboard-panel { background-color: #1e2a38; border-radius: 12px; padding: 25px; margin-bottom: 35px; border: 1px solid #2c3e50; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 20px; margin-bottom: 20px; text-align: center; }
 .stat-box { display: flex; flex-direction: column; }
@@ -267,11 +288,19 @@ const getStatusColor = (status: string) => {
 .filter-buttons button:hover, .sort-buttons button:hover { background: #333; }
 .filter-buttons button.active, .sort-buttons button.active { background: #2c3e50; color: #42b983; border-color: #42b983; }
 
-/* List View */
+
 .book-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 15px; }
 .book-card { background-color: #1e2a38; padding: 20px; border-radius: 10px; border: 1px solid #2c3e50; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
 .book-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); background-color: #233040; }
-.selected-card { border-left: 5px solid #42b983; background-color: #1a232e !important; box-shadow: inset 0 0 0 1px #42b983; }
+
+
+.selected-card {
+  border: 2px solid #4CAF50 !important; /* Grüner Rahmen rundum */
+  background-color: #2e4a3e !important; /* Etwas grünerer Hintergrund */
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.4) !important; /* Glow Effekt */
+  transform: scale(1.01); /* Minimal größer */
+}
+
 .card-content-wrapper { display: flex; gap: 15px; align-items: flex-start; }
 .book-cover { flex-shrink: 0; width: 60px; height: 90px; border-radius: 4px; overflow: hidden; background-color: #2c2c2c; display: flex; align-items: center; justify-content: center; }
 .book-cover img { width: 100%; height: 100%; object-fit: cover; }
@@ -286,16 +315,16 @@ const getStatusColor = (status: string) => {
 .card-details { font-size: 0.95rem; color: #b0bec5; margin-bottom: 10px; }
 .book-year { margin-left: 5px; color: #78909c; }
 
-/* NEU: Sterne Styling */
+
 .card-rating { letter-spacing: 2px; }
 .star-filled { color: #fdd835; }
-.star-empty { color: #444; } /* Dunkles Grau für leere Sterne */
+.star-empty { color: #444; }
 
 .empty-state { text-align: center; color: #666; padding: 40px; font-style: italic; }
 .slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease-out; overflow: hidden; max-height: 500px; opacity: 1; }
 .slide-fade-enter-from, .slide-fade-leave-to { max-height: 0; opacity: 0; }
 
-/* Kanban View */
+
 .kanban-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
 .kanban-column { background-color: #1e1e1e; border-radius: 12px; padding: 15px; border: 1px solid #333; }
 .column-title { margin: 0 0 15px 0; font-size: 1.1rem; color: #e0e0e0; text-align: center; border-top: 3px solid #666; padding-top: 10px; }
